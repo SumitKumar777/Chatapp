@@ -3,6 +3,8 @@
    "compilerOptions": {
 			"forceConsistentCasingInFileNames": true,
 			"rootDir": "./src",
-			"outDir": "./dist"
-		}
+			"outDir": "./dist",
+           "types": ["node", "express"]
+		},
+        "include": ["src", "types"] 
 }
