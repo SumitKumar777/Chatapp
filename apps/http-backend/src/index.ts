@@ -5,13 +5,22 @@ import  cookieParser from "cookie-parser"
 import bodyPaser from "body-parser"
 import jwt from "jsonwebtoken";
 import prisma from "../../../packages/db/dist/index.js";
-
+import cors from "cors"
 
 const app:Express=express();
+
+
+
+app.use(cors({
+   origin:"http://localhost:3000",
+   credentials:true
+}));
+
 
 app.use(bodyPaser.urlencoded({ extended: true }))
 app.use(express.json());
 app.use(cookieParser());
+
 
 
 const PORT = 3001;
@@ -66,7 +75,7 @@ app.post("/signin",async(req,res)=>{
       const token = jwt.sign({id}, JWT_SECRET);
 
 
-      res.status(200).cookie("Authorization", token, { maxAge: 90000, httpOnly: true }).json({ message: "request received",foundUser });
+      res.status(200).cookie("Authorization", token, { maxAge: 90000, httpOnly: true ,secure:false,sameSite:"none"}).json({ message: "request received",foundUser });
 
    } catch (error:any) {
       res.json({ message: "request received", error:error.message }).status(400);
