@@ -9,21 +9,25 @@ const SignUp=()=>{
    const handleSubmit=async(e:React.FormEvent<HTMLFormElement>)=>{
       e.preventDefault();
       const form=new FormData(e.currentTarget);
-      const userName=form.get("username");
+      const username=form.get("username");
       const email=form.get("email");
       const password=form.get("password");
 
      try {
+
        const signUpResponse = await axios.post(
 					"http://localhost:3001/signup",
-					{ userName, email, password }
+					{ username, email, password },
+               {withCredentials:true}
 				);
+
 				console.log(signUpResponse, "signupResponse");
             if(signUpResponse){
-               router.push("/connect")
+               router.push("/signin")
             }
+           
      } catch (error) {
-      
+
       console.log(error,"error in the signup");
      }
    }

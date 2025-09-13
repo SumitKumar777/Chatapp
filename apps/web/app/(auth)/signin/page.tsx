@@ -13,15 +13,23 @@ const SignIn = () => {
 		const password = form.get("password");
 
 		try {
-			const signinResponse = await axios.post("http://localhost:3001/signin", {
+			const signinResponse = await axios.post(
+				"http://localhost:3001/signin",
+				{
+					email,
+					password,
+				},
+				{
+					
+					withCredentials: true,
+				}
+			);
 
-				email,
-				password,
-			});
-			console.log(signinResponse, "signinResponse");
-			if (signinResponse) {
-				router.push("/connect");
-			}
+			console.log(signinResponse.headers, "signinResponse");
+         if(signinResponse){
+            router.push("/connect");
+         }
+			
 		} catch (error) {
 			console.log(error, "error in the signup");
 		}

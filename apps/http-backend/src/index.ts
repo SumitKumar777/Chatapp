@@ -75,7 +75,12 @@ app.post("/signin",async(req,res)=>{
       const token = jwt.sign({id}, JWT_SECRET);
 
 
-      res.status(200).cookie("Authorization", token, { maxAge: 90000, httpOnly: true ,secure:false,sameSite:"none"}).json({ message: "request received",foundUser });
+      res.status(200).cookie("Authorization", token, {
+         maxAge: 90000,
+         httpOnly: true,
+         secure: false,
+         sameSite: "lax", 
+      }).json({ message: "request received",foundUser });
 
    } catch (error:any) {
       res.json({ message: "request received", error:error.message }).status(400);

@@ -62,15 +62,17 @@ wss.on("connection",((ws,request)=>{
    }
    state.push(userObj);
 
-   ws.on("message", (data) => {
+   // Correct the types of data in this
+   ws.on("message", (data:string) => {
       try {
-         const parsedData:RequestBody=JSON.parse(data.toString());
+         console.log(data,"data in the server message");
+         const parsedData:RequestBody=JSON.parse(data);
          console.log(parsedData,"parsedData in the websocket");
 
          if(parsedData.type==="join_room"){
             const user:State=state.find((u)=>u.socket===ws)!;
             user.rooms.push(parsedData.roomId);
-            console.log("user in join room",user);
+            console.log("user in join room");
 
          }
          if (parsedData.type === "leave_room") {
@@ -95,6 +97,7 @@ wss.on("connection",((ws,request)=>{
 
 
       } catch (error) {
+         console.log(data.toString(), "data in the websocket");
          console.log(error,"error in the message")
       }
    })
