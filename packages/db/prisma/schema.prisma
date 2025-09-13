@@ -14,32 +14,49 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-model User{
-  id String @id @default(uuid())
-  username String 
-  email String @unique
-  password String
+model User {
+  id        String   @id @default(uuid())
+  username  String
+  email     String   @unique
+  password  String
   createdAt DateTime @default(now())
-  room Room[]
-  chat Chat[]
 
+  
+  rooms     Room[]        @relation("CreatedRooms")  
+  memberships RoomMember[] 
+  chats     Chat[]
 }
 
+model Room {
+  id          String   @id @default(uuid())
+  name        String
+  createdById String
+  createdAt   DateTime @default(now())
 
-model Room{
-  id String @id @default(uuid())
-  userId String
-  adminId String
-  roomName String
-  user User @relation(fields: [userId], references: [id])
-  chat Chat[]
+  
+  createdBy   User   @relation("CreatedRooms", fields: [createdById], references: [id])
+  members     RoomMember[]
+  chats       Chat[]
 }
 
-model Chat{
-  id Int @id @default(autoincrement())
-  message String
-  userId String
-  roomId String
-  room Room @relation(fields: [roomId],references: [id])
-  user User @relation(fields: [userId],references: [id])
+model RoomMember {
+  id        String   @id @default(uuid())
+  roomId    String
+  userId    String
+  role      String   @default("member") 
+  joinedAt  DateTime @default(now())
+
+  room      Room @relation(fields: [roomId], references: [id])
+  user      User @relation(fields: [userId], references: [id])
+}
+
+model Chat {
+  id        Int      @id @default(autoincrement())
+  message   String
+  userId    String
+  roomId    String
+  createdAt DateTime @default(now())
+
+  user      User @relation(fields: [userId], references: [id])
+  room      Room @relation(fields: [roomId], references: [id])
 }
