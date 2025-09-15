@@ -12,11 +12,14 @@ interface RequestBody{
    message?:string
 }
 
-
 interface State{
    userId:string,
    socket:WebSocket,
    rooms:string[]
+}
+interface UserSocket {
+   userId: string,
+   socket: WebSocket,
 }
 
 
@@ -51,7 +54,100 @@ const authUser=(reqUrl:string):AuthUser =>{
 
 
 
-const state: State[] = [];
+const allUser: Map<WebSocket,string> = new Map();
+
+const mainState: Map<string, UserSocket[]> = new Map()
+
+// AddUser to room 
+const addUsertoRoom=(roomId:string,userSocket:WebSocket)=>{
+
+   // find the user in alluser user and put that into mainState;
+   const id=allUser.get(userSocket);
+   if(!id){
+      console.log("user not found in adding user");
+      return;
+   }
+   // check for the first user 
+   if(!mainState.has(roomId)){
+      mainState.set(roomId,[{userId:id!,socket:userSocket}]);
+   }
+
+   const roomUsers=mainState.get(roomId);
+   console.log(roomUsers,"roomUser");
+
+   const existinguser=roomUsers?.some(user=>user.userId===id);
+
+   if(!existinguser){
+      roomUsers?.push({userId:id,socket:userSocket});
+   }
+   userSocket.send("user connected");
+
+}
+
+// Remove from room 
+const removeUserfromRoom=(roomId:string,userSocket:WebSocket)=>{
+
+   const id=allUser.get(userSocket);
+   if(!id){
+      console.log("no id in remove user from room");
+      return ;
+   }
+   if(!mainState.has(roomId)){
+      console.log("no such room in leave room ");
+      return ;
+   }
+
+   const users=mainState.get(roomId);
+
+   const updatedUser=users?.filter((user)=>user.userId!==id);
+
+   if(updatedUser?.length===0){
+      mainState.delete(roomId);
+   }else{
+      mainState.set(roomId,updatedUser!);
+   }
+   userSocket.send("user left the room ");
+}
+
+// Brodcast to roomMember
+
+const brodcastMessage=(roomId:string,message:string,userSocket:WebSocket)=>{
+
+   if(!roomId || !message|| !userSocket){
+      console.log("function parameters are missing");
+      return ;
+   }
+
+   const id=allUser.get(userSocket);
+   if(!id){
+      console.log("user id not found in broadcast message");
+      return ;
+   }
+   const connectedUser=mainState.get(roomId)!;
+
+   if(!connectedUser){
+      console.log("roomId not found in broadcast message");
+      return ;
+   }
+
+   connectedUser.forEach((user)=>{
+      try {
+         user.socket.send(JSON.stringify({
+            roomId,
+            from:id,
+            message
+         }))
+      } catch (error) {
+         console.log(`error sending to this user ${id} in room ${roomId}`);
+      }
+   })
+
+
+}
+
+
+
+
 
 wss.on("connection",((ws,request)=>{
    ws.on("error", (err) => console.log(err));
@@ -63,45 +159,25 @@ wss.on("connection",((ws,request)=>{
       ws.close();
       return ;
    }
-   const userObj = {
-      userId: user.userId ?? "",
-      socket: ws,
-      rooms: []
-   }
-   state.push(userObj);
+   allUser.set(ws, user.userId!);
 
    // Correct the types of data in this
    ws.on("message", (data:string) => {
       try {
-         console.log(data,"data in the server message");
          const parsedData:RequestBody=JSON.parse(data);
          console.log(parsedData,"parsedData in the websocket");
+         const {type,roomId,message}=parsedData;
 
-         if(parsedData.type==="join_room"){
-            const user:State=state.find((u)=>u.socket===ws)!;
-            user.rooms.push(parsedData.roomId);
-            console.log("user in join room");
-
+         if(type==="join_room"){
+            addUsertoRoom(roomId,ws); 
          }
-         if (parsedData.type === "leave_room") {
-            const user: State = state.find((u) => u.socket === ws)!;
-
-            user.rooms = user.rooms.filter((room) => room !== parsedData.roomId);
-
-            console.log("user in leave room" );
+         if (type === "leave_room") {
+           removeUserfromRoom(roomId,ws);
+         }
+         if (type === "message") {
+            brodcastMessage(roomId, message!,ws);
          }
 
-
-         if (parsedData.type === "message") { 
-            const user: State = state.find((u) => u.socket === ws)!;
-            const restMember=state.filter((u)=>u.socket!=user.socket);
-            restMember.map((m)=>{
-               m.socket.send(JSON.stringify(parsedData.message));
-            })
-
-            console.log("user in message room", restMember);
-
-         }
 
       } catch (error) {
          console.log(data.toString(), "data in the websocket");
