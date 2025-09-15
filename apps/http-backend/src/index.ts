@@ -281,7 +281,7 @@ app.post("/message",authUser,async(req:Request,res:Response)=>{
       }
       // put the message in publisher so that worker of websocket who are listening can send message to other connected user on the room 
       
-      client.publish("messages",JSON.stringify({userId,roomId,message}))
+     
       return res.status(200).json({status:"success",message:"message sent to websocket",data:storeMessage})
 
    } catch (error:unknown) {
