@@ -16,6 +16,17 @@ export const createRoomSchema=z.object({
 })
 
 
+export const joinRoom=z.object({
+   roomId:z.string("must be a string")
+})
+
+export const roomMessage=z.object({
+   roomId:z.string(),
+   message:z.string(),
+})
+
+
+
 export type SignUpSchema=z.infer<typeof signupSchema>;
 
 export type SignInSchema = z.infer<typeof siginSchema>;

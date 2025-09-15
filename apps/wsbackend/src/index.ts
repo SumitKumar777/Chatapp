@@ -12,18 +12,20 @@ interface RequestBody{
    message?:string
 }
 
+
 interface State{
    userId:string,
    socket:WebSocket,
    rooms:string[]
 }
-const state:State[]=[];
+
 
 
 interface AuthUser{
    success:boolean,
    userId:string |null
 }
+
 
 const authUser=(reqUrl:string):AuthUser =>{
    console.log(reqUrl,"reqUrl in the function ")
@@ -44,6 +46,13 @@ const authUser=(reqUrl:string):AuthUser =>{
    }
 }
 
+
+// store all the user when the add user message commes find that user from the allUser set and put that into the roomid because once the user connected only first time the user id we can have after that no user id we are able to access;
+
+
+
+const state: State[] = [];
+
 wss.on("connection",((ws,request)=>{
    ws.on("error", (err) => console.log(err));
 
@@ -54,11 +63,10 @@ wss.on("connection",((ws,request)=>{
       ws.close();
       return ;
    }
-   
-   const userObj={
-      userId:user.userId  ?? "",
-      socket:ws,
-      rooms:[]
+   const userObj = {
+      userId: user.userId ?? "",
+      socket: ws,
+      rooms: []
    }
    state.push(userObj);
 
@@ -94,7 +102,6 @@ wss.on("connection",((ws,request)=>{
             console.log("user in message room", restMember);
 
          }
-
 
       } catch (error) {
          console.log(data.toString(), "data in the websocket");

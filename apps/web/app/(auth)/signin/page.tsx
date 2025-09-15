@@ -27,7 +27,7 @@ const SignIn = () => {
 
 			console.log(signinResponse.headers, "signinResponse");
          if(signinResponse){
-            router.push("/connect");
+            router.push("/dashboard");
          }
 			
 		} catch (error) {
