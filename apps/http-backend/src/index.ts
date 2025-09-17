@@ -78,7 +78,7 @@ app.post("/signin",async(req,res)=>{
 
 
       return res.status(200).cookie("Authorization", token, {
-         maxAge: 90000,
+         maxAge: 7*24*60*60*1000,
          httpOnly: true,
          secure: false,
          sameSite: "lax", 
@@ -115,7 +115,7 @@ app.post("/createroom",authUser,async(req:Request,res:Response)=>{
                userId :userId as string
             }
          })
-         return room.id;
+         return room;
       })
       return res.status(200).json({status:"success" ,message: "request received in create Room",data:roomCreated });
    } catch (error:any) {
@@ -172,7 +172,7 @@ app.get("/room/detail/:roomId",authUser,async(req:Request<RoomParams>,res)=>{
 // Response: { message: "Joined room" }
 
 
-app.post("/room/join",authUser,async(req:Request<RoomParams>,res:Response)=>{
+app.post("/joinroom",authUser,async(req:Request<RoomParams>,res:Response)=>{
    try {
       const body=req.body;
       const parsed=joinRoom.safeParse(body);
@@ -219,7 +219,7 @@ app.post("/room/join",authUser,async(req:Request<RoomParams>,res:Response)=>{
 // ⸻
 
 app.delete(
-   "/rooms/leaveroom",
+   "/leaveroom",
    authUser,
    async (req: Request, res: Response) => {
       try {
@@ -256,6 +256,9 @@ app.delete(
 );
 
 
+// also check is this user member of this room who is sending message for security 
+
+
 app.post("/message",authUser,async(req:Request,res:Response)=>{
    try {
       const data = req.body;
@@ -281,7 +284,6 @@ app.post("/message",authUser,async(req:Request,res:Response)=>{
       }
       // put the message in publisher so that worker of websocket who are listening can send message to other connected user on the room 
       
-     
       return res.status(200).json({status:"success",message:"message sent to websocket",data:storeMessage})
 
    } catch (error:unknown) {

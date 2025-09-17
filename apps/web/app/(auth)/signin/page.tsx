@@ -25,8 +25,8 @@ const SignIn = () => {
 				}
 			);
 
-			console.log(signinResponse.headers, "signinResponse");
-         if(signinResponse){
+			console.log(signinResponse, "signinResponse");
+         if(signinResponse.data){
             router.push("/dashboard");
          }
 			
@@ -37,25 +37,25 @@ const SignIn = () => {
 
 	return (
 		<div>
-			<form onSubmit={handleSubmit}>
-				
-				<label htmlFor="email">
-					email
-					<br />
-					<input type="email" name="email" placeholder="Enter your email" />
-				</label>
-				<label htmlFor="password">
-					password
-					<br />
-					<input
-						type="password"
-						name="password"
-						placeholder="Enter your password"
-					/>
-				</label>
-				<button type="submit">Signin</button>
+			<form onSubmit={handleSubmit} className="max-w-[300px] border-2 w-full space-y-4 mt-10 ">
+				<label htmlFor="email">email</label>
+				<br />
+				<input type="email" name="email" placeholder="Enter your email"  className="border-1"/>
+				<br />
+				<label htmlFor="password">password</label>
+				<br />
+				<input
+					type="password"
+					name="password"
+					placeholder="Enter your password"
+					className="border-1"
+				/>
+				<br />
 
-            <Link href={"/signup"}>Go to Signup</Link>
+
+				<button type="submit">Signin</button>
+				<br />
+				<Link href={"/signup"}>Go to Signup</Link>
 			</form>
 		</div>
 	);
