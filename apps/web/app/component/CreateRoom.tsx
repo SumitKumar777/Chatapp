@@ -1,9 +1,12 @@
 "use client";
 
 import axios from "axios";
+import useSocket from "../store/hooks/useSocket";
 
 function CreateRoom() {
-
+   const socket =useSocket((state=>state.socket));
+   const setRoom=useSocket((state)=>state.setRoom);
+   const setCurrentRoomId=useSocket((state)=>state.setCurrentRoomId);
    const createRoom=async(e:React.FormEvent<HTMLFormElement>)=>{
      try {
        e.preventDefault();
@@ -20,12 +23,43 @@ function CreateRoom() {
                withCredentials:true
             }
          )
+
+         if(!createRoomResponse || !createRoomResponse.data){
+            throw new Error("room not created in create room");
+         }
          console.log("createroomResponse",createRoomResponse);
-
-
-     } catch (error:any) {
-      console.log(error,"error in form of creating the room",error.message);
-      
+         const roomData={
+            roomName:createRoomResponse.data.data.name,
+            roomId:createRoomResponse.data.data.id
+         }
+         if(socket && socket.readyState===WebSocket.OPEN){
+              socket?.send(
+								JSON.stringify({
+									type: "join_room",
+									roomId: createRoomResponse.data.data.id,
+								})
+							);
+                     setCurrentRoomId(createRoomResponse.data.data.id);
+                     setRoom(roomData);
+         }else{
+            throw new Error("error in create Room in sending create request to websocket server");
+         }
+         
+         
+     } catch (error:unknown) {
+      if(error instanceof Error){
+          console.log(
+						error,
+						"error in form of creating the room",
+						error.message
+					);
+      }else{
+          console.log(
+						error,
+						"unexpected error in form of creating the room",
+						error
+					);
+      }
      }
    }
    return ( 
