@@ -6,7 +6,9 @@ import bodyPaser from "body-parser"
 import jwt from "jsonwebtoken";
 import prisma from "../../../packages/db/dist/index.js";
 import cors from "cors";
-import { createClient } from "redis";
+import { client, connectClient } from "./routes/worker/redisClient.js";
+
+import "./routes/worker/worker.js";
 
 
 const app:Express=express();
@@ -22,11 +24,8 @@ app.use(bodyPaser.urlencoded({ extended: true }))
 app.use(express.json());
 app.use(cookieParser());
 
-const client=createClient();
-client.on('error', err => console.log('Redis Client Error', err));
 
 const PORT = 3001;
-
 
 
 app.get("/",(req,res)=>{
@@ -271,20 +270,13 @@ app.post("/message",authUser,async(req:Request,res:Response)=>{
       // put this in queue
 
       const {roomId,message}=parsed.data;
+      await connectClient();
 
-      const storeMessage=await prisma.chat.create({
-         data:{
-            userId:userId as string,
-            roomId,
-            message
-         }
-      })
-      if(!storeMessage){
-         throw new Error("chat not stored");
-      }
-      // put the message in publisher so that worker of websocket who are listening can send message to other connected user on the room 
+      await client.lPush("chatMessage",JSON.stringify({userId,roomId,message}));
+
+   
       
-      return res.status(200).json({status:"success",message:"message sent to websocket",data:storeMessage})
+      return res.status(200).json({status:"success",message:"message sent to websocket"})
 
    } catch (error:unknown) {
       if(error instanceof Error){
@@ -294,19 +286,18 @@ app.post("/message",authUser,async(req:Request,res:Response)=>{
          console.log("error in sending message", error);
          return res.status(500).json({ status: "error", message: "unexpected error happend in sending message" })
       }
-
-
    }
 })
 
 
 async function startServer(){
-   await client.connect();
-   console.log("client connected");
-   app.listen(PORT, () => console.log(`app is listening on port ${PORT}`))
-
+  try {
+   await connectClient();
+     app.listen(PORT, () => console.log(`app is listening on port ${PORT}`))
+  } catch (error) {
+   console.log("error in connecting starting the server",error)
+  }
 }
-
 
 
 startServer();
