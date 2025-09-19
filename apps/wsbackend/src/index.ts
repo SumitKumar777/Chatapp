@@ -31,7 +31,6 @@ interface AuthUser{
 
 
 const authUser=(reqUrl:string):AuthUser =>{
-   console.log(reqUrl,"reqUrl in the function ")
    const parsedUrl= url.parse(reqUrl,true);
    const queryParams=parsedUrl.query;
 
@@ -78,9 +77,7 @@ const addUsertoRoom=(roomId:string,userSocket:WebSocket)=>{
 
    const existinguser=roomUsers?.some(user=>user.userId===id);
 
-   console.log("roomId outside adduser",roomId);
    if(!existinguser){
-      console.log("roomId in the adduser websocket",roomId)
       roomUsers?.push({userId:id,socket:userSocket});
    }
    userSocket.send("user connected");
@@ -90,11 +87,13 @@ const addUsertoRoom=(roomId:string,userSocket:WebSocket)=>{
 // Remove from room 
 const removeUserfromRoom=(roomId:string,userSocket:WebSocket)=>{
 
+
    const id=allUser.get(userSocket);
    if(!id){
       console.log("no id in remove user from room");
       return ;
    }
+
    if(!mainState.has(roomId)){
       console.log("no such room in leave room ");
       return ;
@@ -103,6 +102,8 @@ const removeUserfromRoom=(roomId:string,userSocket:WebSocket)=>{
    const users=mainState.get(roomId);
 
    const updatedUser=users?.filter((user)=>user.userId!==id);
+   console.log(id,"userId in removeuserfromroom")
+   updatedUser?.forEach((item)=>console.log("all the users connected after removing room",item.userId))
 
    if(updatedUser?.length===0){
       mainState.delete(roomId);
@@ -121,23 +122,44 @@ const brodcastMessage=(roomId:string,message:string,userSocket:WebSocket)=>{
       return ;
    }
 
-   console.log(roomId,message,"broadcast");
-
+   console.log("roomId in broadcast",roomId,"message in",message,"broadcast");
 
    const id=allUser.get(userSocket);
+
+
    if(!id){
       console.log("user id not found in broadcast message");
       return ;
    }
-   const connectedUser=mainState.get(roomId)!;
 
-   connectedUser.forEach((item) => console.log("userId", item.userId));
-
-   if(!connectedUser){
-      console.log("roomId not found in broadcast message");
-      return ;
+   if(!mainState.has(roomId)){
+      console.log("room id not present",roomId);
    }
 
+
+   const connectedUser=mainState.get(roomId)!;
+   console.log(id,"userid which is broadcasting the message in broadcast ")
+
+   connectedUser.forEach((item)=>console.log("all the connected user for that room",item.userId))
+
+   if (!connectedUser) {
+      console.log("roomId not found in broadcast message");
+      return;
+   }
+
+
+
+   const userPresent=connectedUser.some((item)=>item.userId===id)
+
+   console.log("user present in broadcast",userPresent);
+
+
+   if(!userPresent){
+      console.log("user is not present",userPresent);
+      return;
+   }
+
+  
 
    connectedUser.forEach((user)=>{
       try {
@@ -176,13 +198,13 @@ wss.on("connection",((ws,request)=>{
    ws.on("message", (data:string) => {
       try {
          const parsedData:RequestBody=JSON.parse(data);
-         console.log(parsedData,"parsedData in the websocket");
          const {type,roomId,message}=parsedData;
 
          if(type==="join_room"){
             addUsertoRoom(roomId,ws); 
          }
          if (type === "leave_room") {
+            console.log("start of leave room ")
            removeUserfromRoom(roomId,ws);
          }
          if (type === "message") {

@@ -8,29 +8,45 @@ function RoomBlock({roomName,roomId}:Rooms) {
 	const setCurrentRoomId=useSocket((state)=>state.setCurrentRoomId);
 	const socket=useSocket((state)=>state.socket);
 	const room=useSocket((state)=>state.rooms);
-	const setRoom=useSocket((state)=>state.setRoom);
+	const deleteRoom=useSocket((state)=>state.deleteRoom);
+	const deleteMessage=useSocket((state)=>state.deleteMessage);
 
 	// when the user click on delete room first it should make call to the backend and then to webSocket backend and then remove from the dom 
 
 	const leaveRoom=async():Promise<"deleted"|"not_Deleted">=>{
+		return new Promise((resolve,reject)=>{
+		try {
+			console.log("beginning");
+				const foundUser = room.some((item) => item.roomId === roomId);
+
+				// true when roomId is found so user not left the room 
+				// false when roomId is not found so user left the room so return deleted
+
+				if (!foundUser) {
+					return resolve("deleted");
+				}
+				console.log("first");
+
+				const socketData = {
+					type: "leave_room",
+					roomId,
+				};
 
 
-		const foundUser=room.some((item)=>item.roomId===roomId);
-		if(foundUser){
-			return "deleted";
+				if (socket?.readyState === WebSocket.OPEN) {
+					socket.send(JSON.stringify(socketData));
+
+					return resolve("deleted");
+				} else {
+					console.log("last done")
+					return resolve("not_Deleted");
+				}
+
+		} catch (error) {
+			console.log(error,"error in leave room ");
+			return reject(error)
 		}
-
-		const socketData={
-				type:"leave_room",
-				roomId
-			}
-			if(socket?.readyState===WebSocket.OPEN){
-				socket.send(JSON.stringify(socketData));
-				return "deleted"
-			}else{
-				return "not_Deleted"
-			}
-			
+		})
 	}
 
 
@@ -47,7 +63,7 @@ function RoomBlock({roomName,roomId}:Rooms) {
 			}
 			const backendRemove = await axios.delete(
 				`${process.env.NEXT_PUBLIC_BACKEND_URL}/leaveroom`,
-				{data:roomId as string,
+				{data:{roomId},
 					withCredentials:true
 				},				
 			);
@@ -59,13 +75,13 @@ function RoomBlock({roomName,roomId}:Rooms) {
 			}
 
 			// remove from the room state 
+			deleteRoom(roomId);
+			deleteMessage(roomId);
 
-			const updatedRooms=room.filter((item)=>item.roomId!==roomId);
-			console.log(updatedRooms,"updatedRooms");
 
 		} catch (error:unknown) {
 			if(error instanceof Error){
-				console.log("error in roomDeletion")
+				console.log("error in roomDeletion",error)
 			}
 		}
 	}
@@ -78,8 +94,8 @@ function RoomBlock({roomName,roomId}:Rooms) {
 					<p>{roomId}</p>
 				</div>
 				<div>
-					<button onClick={leaveRoom} className="bg-blue-500">Leave</button>
-					<button onClick={handleDelete} className="bg-blue-400">Delete Room</button>
+					<button onClick={()=>leaveRoom()} className="bg-blue-500">Leave</button>
+					<button onClick={()=>handleDelete()} className="bg-blue-400">Delete Room</button>
 				</div>
 			</div>
 		);
