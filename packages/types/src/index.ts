@@ -20,6 +20,10 @@ export const joinRoom=z.object({
    roomId:z.string("must be a string")
 })
 
+export const leaveRoom = z.object({
+   roomId: z.string("must be a string")
+})
+
 export const roomMessage=z.object({
    roomId:z.string(),
    message:z.string(),

@@ -60,8 +60,8 @@ function ShowMessage() {
 
    return (
 			<>
-				<div className="">
-					<div>
+				<div className=" c">
+					<div className="bg-yellow-200">
 						{message.length !== 0
 							? message
 									.filter((item) => item.roomId === currentRoomId)
@@ -80,7 +80,7 @@ function ShowMessage() {
 							<input
 								type="text"
 								placeholder="Enter message"
-								className=" border-2  "
+								className=" border-2   "
 								value={userMessage}
 								onChange={(e) => setUserMessage(e.target.value)}
 							/>

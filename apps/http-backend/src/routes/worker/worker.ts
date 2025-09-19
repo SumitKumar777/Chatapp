@@ -15,7 +15,7 @@ const startWorker=async ()=>{
       console.log("client connected in the startworker loop starting");
       while (true) {
          try {
-            const msgRequest =await client.brPop("chatMessage", 0);
+            const msgRequest = await client.brPop("message", 0);
             console.log(msgRequest?.element, " data in startWorker");
             if(msgRequest?.element){
                const { userId, roomId, message } = JSON.parse(msgRequest?.element);
@@ -28,7 +28,6 @@ const startWorker=async ()=>{
                   }
                })
             }
-            
 
          } catch (error) {
             console.log("error in while loop of startworker", error)

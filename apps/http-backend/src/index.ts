@@ -225,6 +225,7 @@ app.delete(
          const body=req.body;
          const parsed=joinRoom.safeParse(body);
          if(!parsed.success){
+            console.log("body",body,"parsedDate",parsed);
             throw new Error("Invalid leave room request body");
          }
 
@@ -237,11 +238,13 @@ app.delete(
             },
          });
 
+
          if (deletedMember.count === 0) {
-            return res.status(404).json({ message: "You are not a member of this room" });
+            return res.status(404).json({status:"success", message: "You are not a member of this room" });
          }
 
          return res.status(200).json({ message: "Left room successfully" });
+
       } catch (error) {
          if (error instanceof Error) {
             console.log("error in the leaving room", error.message);
@@ -272,10 +275,8 @@ app.post("/message",authUser,async(req:Request,res:Response)=>{
       const {roomId,message}=parsed.data;
       await connectClient();
 
-      await client.lPush("chatMessage",JSON.stringify({userId,roomId,message}));
+      await client.lPush("message",JSON.stringify({userId,roomId,message}));
 
-   
-      
       return res.status(200).json({status:"success",message:"message sent to websocket"})
 
    } catch (error:unknown) {
