@@ -7,9 +7,7 @@ import jwt from "jsonwebtoken";
 import prisma from "../../../packages/db/dist/index.js";
 import cors from "cors";
 import { client, connectClient } from "./routes/worker/redisClient.js";
-
 import "./routes/worker/worker.js";
-
 
 const app:Express=express();
 
@@ -72,8 +70,9 @@ app.post("/signin",async(req,res)=>{
          throw new Error("user not found");
       }
       const id=foundUser.id;
+      const username=foundUser.username;
 
-      const token = jwt.sign({id}, JWT_SECRET);
+      const token = jwt.sign({id,username}, JWT_SECRET);
 
 
       return res.status(200).cookie("Authorization", token, {
@@ -289,6 +288,125 @@ app.post("/message",authUser,async(req:Request,res:Response)=>{
       }
    }
 })
+
+
+// Get all the rooms and their chats in single fetch ;
+
+app.get("/userstate",authUser,async(req,res)=>{
+   try {
+      const userId = req.userId;
+      if (!userId) {
+         throw new Error("user id is not present");
+      }
+
+      const userData=await prisma.user.findUnique({
+         where:{
+            id:userId
+         },
+         include:{
+            rooms:true,
+            chats:true,
+            memberships:true,
+         }
+      })
+
+      if(!userData){
+         throw new Error("user data is not present");
+      }
+      return res.status(200).json({status:"success",message:"all the user data",data:userData});
+
+   } catch (error) {
+      console.log(error,"error in getting the state of the user");
+      return res.status(500).json({status:"failed",message:"failed to get user data",error})
+   }
+   
+
+})
+
+// Fetch all the Rooms that the user joined in 
+
+app.get("/getAllRooms",authUser,async(req,res)=>{
+
+   try {
+
+      const userId = req.userId;
+
+      const allRooms=await prisma.roomMember.findMany({
+         where:{
+            userId:userId
+         },
+         select:{
+            roomId:true,
+            room:{
+               select:{
+                  name:true
+               }
+            }
+         }
+      })
+
+
+      const formatedData:{roomName:string,roomId:string}[] = [];
+
+      allRooms.forEach((item) => {
+
+         formatedData.push({ roomName: item.room.name, roomId: item.roomId });
+      })
+
+      return res.status(200).json({status:"success",message:"feched all the room user is part of",data:formatedData});
+
+
+   } catch (error) {
+      console.log("error in getAll rooms",error);
+      return res.status(500).json({status:"failed",message:"error in fetching all the rooms",error})
+   }
+
+
+})
+
+
+app.get("/getRoomChats/:roomId", authUser, async (req: Request<{ roomId: string }>, res) => {
+
+   try {
+      const roomId = req.params.roomId;
+
+      const chats=await prisma.room.findUnique({
+         where:{
+            id:roomId
+         },
+         include:{
+            chats:{
+               select:{
+                  id:true,
+                  message:true,
+                  createdAt:true,
+                  user:{
+                     select:{
+                        username:true,
+                        id:true
+                     }
+                  }
+               }
+            }
+         }
+
+      });
+
+      if(!chats){
+         return res.status(404).json({status:"success",message:"no chats for this room",data:chats});
+      }
+
+      return res.status(200).json({status:"success",message:"all the chat for this room",data:chats});
+
+
+   } catch (error) {
+
+      console.log("error in the fetching chat for the room");
+      return res.status(500).json({status:"failed",message:"failed to get the chats for this room",error});
+   }
+
+})
+
 
 
 async function startServer(){

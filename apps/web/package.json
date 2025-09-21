@@ -12,9 +12,12 @@
   },
   "dependencies": {
     "@hookform/resolvers": "^5.2.1",
+    "@repo/types": "workspace:*",
     "@repo/ui": "workspace:*",
     "@tailwindcss/postcss": "^4.1.13",
+    "@types/jsonwebtoken": "^9.0.10",
     "axios": "^1.12.0",
+    "jsonwebtoken": "^9.0.2",
     "next": "^15.5.0",
     "postcss": "^8.5.6",
     "react": "^19.1.0",

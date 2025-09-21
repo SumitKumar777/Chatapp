@@ -7,12 +7,14 @@ dotenv.config();
 declare global {
   namespace Express {
     interface Request {
-      userId?: string;
+      userId?: string; 
+      username:string;
+      
     }
   }
 }
 
-export function authUser(req:Request<{},{},SignInSchema>,  res:Response, next: NextFunction) {
+export function authUser(req:Request<{},{},{}>,  res:Response, next: NextFunction) {
    try {
       const token = req.cookies.Authorization;
       console.log("auth token",token)
@@ -23,7 +25,10 @@ export function authUser(req:Request<{},{},SignInSchema>,  res:Response, next: N
          throw new Error("unauthenticated user");
       }
 
+      console.log(decode,"decode in the authuser middleware ");
+
       req.userId=decode.id;
+      req.username=decode.username;
 
       next();
    } catch (error:any) {

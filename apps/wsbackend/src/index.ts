@@ -33,6 +33,7 @@ interface AuthUser{
 const authUser=(reqUrl:string):AuthUser =>{
    const parsedUrl= url.parse(reqUrl,true);
    const queryParams=parsedUrl.query;
+   console.log(queryParams, "token in websocket backend");
 
    if(queryParams.token){
       const decode=jwt.verify(queryParams.token as string,JWT_SECRET) as JwtPayload
