@@ -29,6 +29,7 @@ function Dashboard() {
    const setMessage=useSocket((state)=>state.setMessage);
 	const setUserId=userDetail((state)=>state.setUserId);
 	const addRoom=useSocket((state)=>state.addRoom);
+	const setCurrentRoomId=useSocket((state)=>state.setCurrentRoomId);
 
 
 	useEffect(() => {
@@ -82,8 +83,11 @@ function Dashboard() {
 						if(roomList.data.data.length!==0){
 							
 								addRoom(roomList.data.data);
+								if(roomList.data.data[0]?.roomId){
+										setCurrentRoomId(roomList.data.data[0]?.roomId);
+								}
+							
 						}
-					
 					}
 
 

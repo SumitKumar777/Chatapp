@@ -365,12 +365,15 @@ app.get("/getAllRooms",authUser,async(req,res)=>{
 })
 
 
+
+
+
 app.get("/getRoomChats/:roomId", authUser, async (req: Request<{ roomId: string }>, res) => {
 
    try {
       const roomId = req.params.roomId;
 
-      const chats=await prisma.room.findUnique({
+      const chatMessages=await prisma.room.findUnique({
          where:{
             id:roomId
          },
@@ -389,14 +392,24 @@ app.get("/getRoomChats/:roomId", authUser, async (req: Request<{ roomId: string 
                }
             }
          }
-
       });
 
-      if(!chats){
-         return res.status(404).json({status:"success",message:"no chats for this room",data:chats});
+      if(!chatMessages){
+         return res.status(404).json({status:"success",message:"no chatMessages for this room",data:chatMessages});
       }
+      const formatedData: {
+         userId: string, id: string, name: string,
+         message: string,
+         time: string
+      }[] = [];
 
-      return res.status(200).json({status:"success",message:"all the chat for this room",data:chats});
+      chatMessages.chats.forEach((item) => {
+         formatedData.push({ userId: item.user.id, id: item.id.toString(), name: item.user.username, message: item.message, time: item.createdAt.toString() });
+      })
+
+
+
+      return res.status(200).json({status:"success",message:"all the chat for this room",data:formatedData});
 
 
    } catch (error) {

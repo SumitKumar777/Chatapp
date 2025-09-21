@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import useSocket from "../store/hooks/useSocket";
 import MessageBlock from "./MessageBlock";
 import axios from "axios";
@@ -12,6 +12,32 @@ function ShowMessage() {
    const [userMessage,setUserMessage]=useState("");
    const socket=useSocket((state)=>state.socket);
    const currentRoomId=useSocket((state)=>state.currentRoomId);
+
+
+
+
+	useEffect(()=>{
+
+		const fetchMessage=async(roomId:string)=>{
+
+			const messages = await axios.get(
+				`${process.env.NEXT_PUBLIC_BACKEND_URL}/getRoomChats/${roomId}`,
+				{
+					withCredentials:true
+				}
+			);
+			console.log("messages in the setting the messages",messages.data.data)
+		}
+
+
+		if(currentRoomId){
+			fetchMessage(currentRoomId);
+		}
+
+	},[currentRoomId])
+
+
+
 
    const handleSendMessage=async()=>{
 
@@ -56,11 +82,13 @@ function ShowMessage() {
       }
    }
 
+	
+
 
 
    return (
 			<>
-				<div className=" c">
+				<div className="">
 					<div className="bg-yellow-200">
 						{message.length !== 0
 							? message
