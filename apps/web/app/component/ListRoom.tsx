@@ -8,7 +8,7 @@ function ListRooms({classes}:{classes:string}) {
 
    return ( 
       <>
-      <div className={classes}>
+      <div className={`${classes} overflow-y-scroll`} >
 
          {room.length!==0 ? room.map((item)=><RoomBlock key={item.roomId} roomName={item.roomName} roomId={item.roomId} />):"No Room Present connect to room or join room to start chatting "}
       </div>

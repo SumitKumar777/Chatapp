@@ -1,12 +1,27 @@
-import { UserData } from "../store/hooks/useSocket";
 
 
-function MessageBlock({roomId,from,message}:UserData) {
+
+
+type ChatMessage = {
+	userId: string;
+	name: string;
+	message: string;
+	time: string;
+};
+
+interface ChatMessageWithDetection extends ChatMessage{
+   className:string
+}
+
+
+function MessageBlock({userId,name,message,time,className}:ChatMessageWithDetection) {
+
    return ( 
-      <div>
-         <h1>{roomId}</h1>
-         <p>{from}</p>
-         <p>{message}</p>
+      <div className={`${className} border-1`}>
+         <p>userId { userId}</p>
+         <p>name{name}</p>
+         <p>message {message}</p>
+         <p>time {time}</p>
       </div>
     );
 }

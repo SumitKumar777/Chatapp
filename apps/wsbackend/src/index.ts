@@ -27,7 +27,14 @@ interface UserSocket {
 interface AuthUser{
    success:boolean,
    userId:string |null
+   username:string | null
 }
+
+type UserInfo={
+   userId:string,
+   username:string
+}
+
 
 
 const authUser=(reqUrl:string):AuthUser =>{
@@ -36,15 +43,18 @@ const authUser=(reqUrl:string):AuthUser =>{
    console.log(queryParams, "token in websocket backend");
 
    if(queryParams.token){
-      const decode=jwt.verify(queryParams.token as string,JWT_SECRET) as JwtPayload
+      const decode=jwt.verify(queryParams.token as string,JWT_SECRET) as JwtPayload;
+      console.log(decode,"decode in the websocket backend ");
       return {
          success:true,
-         userId:decode.id
+         userId:decode.id,
+         username:decode.username
       }
    }else{
       return {
          success:false,
-         userId:null
+         userId:null,
+         username:null
       };
    }
 }
@@ -54,33 +64,40 @@ const authUser=(reqUrl:string):AuthUser =>{
 
 
 
-const allUser: Map<WebSocket,string> = new Map();
+const allUser: Map<WebSocket,UserInfo> = new Map();
 
 const mainState: Map<string, UserSocket[]> = new Map()
 
 // AddUser to room 
 const addUsertoRoom=(roomId:string,userSocket:WebSocket)=>{
 
+
    // find the user in alluser user and put that into mainState;
-   const id=allUser.get(userSocket);
-   if(!id){
+   const user=allUser.get(userSocket);
+   if(!user){
       console.log("user not found in adding user");
       return;
    }
    // check for the first user 
    if(!mainState.has(roomId)){
-      mainState.set(roomId,[{userId:id!,socket:userSocket}]);
+      mainState.set(roomId,[{userId:user.userId,socket:userSocket}]);
+
       userSocket.send("user Connected");
       return ;
    }
 
    const roomUsers=mainState.get(roomId);
 
-   const existinguser=roomUsers?.some(user=>user.userId===id);
+
+   const existinguser=roomUsers?.some(u=>u.userId===user.userId);
+
+
 
    if(!existinguser){
-      roomUsers?.push({userId:id,socket:userSocket});
+
+      roomUsers?.push({userId:user.userId,socket:userSocket});
    }
+
    userSocket.send("user connected");
 
 }
@@ -89,8 +106,8 @@ const addUsertoRoom=(roomId:string,userSocket:WebSocket)=>{
 const removeUserfromRoom=(roomId:string,userSocket:WebSocket)=>{
 
 
-   const id=allUser.get(userSocket);
-   if(!id){
+   const user=allUser.get(userSocket);
+   if(!user){
       console.log("no id in remove user from room");
       return ;
    }
@@ -102,8 +119,8 @@ const removeUserfromRoom=(roomId:string,userSocket:WebSocket)=>{
 
    const users=mainState.get(roomId);
 
-   const updatedUser=users?.filter((user)=>user.userId!==id);
-   console.log(id,"userId in removeuserfromroom")
+   const updatedUser=users?.filter((u)=>u.userId!==user.userId);
+   console.log(user.userId,"userId in removeuserfromroom")
    updatedUser?.forEach((item)=>console.log("all the users connected after removing room",item.userId))
 
    if(updatedUser?.length===0){
@@ -125,10 +142,10 @@ const brodcastMessage=(roomId:string,message:string,userSocket:WebSocket)=>{
 
    console.log("roomId in broadcast",roomId,"message in",message,"broadcast");
 
-   const id=allUser.get(userSocket);
+   const user=allUser.get(userSocket);
 
 
-   if(!id){
+   if(!user){
       console.log("user id not found in broadcast message");
       return ;
    }
@@ -139,7 +156,7 @@ const brodcastMessage=(roomId:string,message:string,userSocket:WebSocket)=>{
 
 
    const connectedUser=mainState.get(roomId)!;
-   console.log(id,"userid which is broadcasting the message in broadcast ")
+   console.log(user.userId,"userid which is broadcasting the message in broadcast ")
 
    connectedUser.forEach((item)=>console.log("all the connected user for that room",item.userId))
 
@@ -149,8 +166,7 @@ const brodcastMessage=(roomId:string,message:string,userSocket:WebSocket)=>{
    }
 
 
-
-   const userPresent=connectedUser.some((item)=>item.userId===id)
+   const userPresent=connectedUser.some((item)=>item.userId===user.userId)
 
    console.log("user present in broadcast",userPresent);
 
@@ -162,17 +178,19 @@ const brodcastMessage=(roomId:string,message:string,userSocket:WebSocket)=>{
 
   
 
-   connectedUser.forEach((user)=>{
+   connectedUser.forEach((u)=>{
       try {
-         if(user.userId!==id){
-            user.socket.send(JSON.stringify({
+         if(u.userId!==user.userId){
+            u.socket.send(JSON.stringify({
                roomId,
-               from: id,
+               userId: user.userId,
+               name:user.username,
+               time:new Date().toString(),
                message
             }))
          }
       } catch (error) {
-         console.log(`error sending to this user ${id} in room ${roomId}`);
+         console.log(`error sending to this user ${user.userId} in room ${roomId}`);
       }
    })
 
@@ -188,12 +206,12 @@ wss.on("connection",((ws,request)=>{
 
    const user:AuthUser=authUser(request.url as string);
 
-   if(!user.success){
+   if(!user.success || !user.userId || !user.username){
       ws.send("not authenticated");
       ws.close();
       return ;
    }
-   allUser.set(ws, user.userId!);
+   allUser.set(ws, {userId:user.userId,username:user.username});
 
    // Correct the types of data in this
    ws.on("message", (data:string) => {
