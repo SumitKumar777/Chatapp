@@ -180,7 +180,6 @@ const brodcastMessage=(roomId:string,message:string,userSocket:WebSocket)=>{
 
    connectedUser.forEach((u)=>{
       try {
-         if(u.userId!==user.userId){
             u.socket.send(JSON.stringify({
                roomId,
                userId: user.userId,
@@ -188,7 +187,7 @@ const brodcastMessage=(roomId:string,message:string,userSocket:WebSocket)=>{
                time:new Date().toString(),
                message
             }))
-         }
+
       } catch (error) {
          console.log(`error sending to this user ${user.userId} in room ${roomId}`);
       }

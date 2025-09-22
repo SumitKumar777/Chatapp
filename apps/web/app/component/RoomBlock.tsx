@@ -88,7 +88,7 @@ function RoomBlock({roomName,roomId}:Rooms) {
 	
   
    return (
-			<div className="flex bg-green-400 border-1 justify-end " onClick={() => setCurrentRoomId(roomId)}>
+			<div className="flex bg-green-700 border-1 justify-end " onClick={() => setCurrentRoomId(roomId)}>
 				<div>
 					<h1>{roomName}</h1>
 					<p>{roomId}</p>
