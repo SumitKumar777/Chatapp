@@ -18,7 +18,7 @@ type ChatMessage = {
 
 
 
-// when we type in the input field the state rerendet that many times fix that when the user click send only that time state should rerender;
+// when we type in the input field the state rerender that many times fix that when the user click send only that time state should rerender;
 
 
 
