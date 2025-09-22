@@ -44,9 +44,11 @@ function CreateRoom() {
          }else{
             throw new Error("error in create Room in sending create request to websocket server");
          }
-         
+
+         e.currentTarget.reset();
          
      } catch (error:unknown) {
+
       if(error instanceof Error){
           console.log(
 						error,
@@ -60,7 +62,9 @@ function CreateRoom() {
 						error
 					);
       }
+      e.currentTarget.reset();
      }
+     
    }
    return ( 
       <>

@@ -4,14 +4,33 @@ import { useEffect, useState } from "react";
 import useSocket from "../store/hooks/useSocket";
 import MessageBlock from "./MessageBlock";
 import axios from "axios";
+import allMessage from "../store/hooks/allMessage";
+import userDetail from "../store/hooks/userDetails";
+
+
+type ChatMessage = {
+	userId: string;
+	id: string;
+	name: string;
+	message: string;
+	time: string;
+};
+
+
+
+// when we type in the input field the state rerendet that many times fix that when the user click send only that time state should rerender;
 
 
 
 function ShowMessage() {
-   const message=useSocket((state)=>state.message);
+
+	const messageByRoom=allMessage((state)=>state.messageByRoom);
    const [userMessage,setUserMessage]=useState("");
    const socket=useSocket((state)=>state.socket);
    const currentRoomId=useSocket((state)=>state.currentRoomId);
+	const userId=userDetail((state)=>state.userId);
+
+	const setMessage=allMessage((state)=>state.setMessage);
 
 
 
@@ -27,7 +46,10 @@ function ShowMessage() {
 				}
 			);
 			console.log("messages in the setting the messages",messages.data.data)
+			setMessage(currentRoomId!,messages.data.data)
 		}
+
+
 
 
 		if(currentRoomId){
@@ -35,8 +57,6 @@ function ShowMessage() {
 		}
 
 	},[currentRoomId])
-
-
 
 
    const handleSendMessage=async()=>{
@@ -82,28 +102,28 @@ function ShowMessage() {
       }
    }
 
-	
-
 
 
    return (
-			<>
-				<div className="">
-					<div className="bg-yellow-200">
-						{message.length !== 0
-							? message
-									.filter((item) => item.roomId === currentRoomId)
-									.map((item) => (
-										<MessageBlock
-											key={item.roomId}
-											roomId={item.roomId}
-											from={item.from}
-											message={item.message}
-										/>
-									))
-							: "Create or Connect to room to see messages"}
+			<div className="relative">
+				<div className="overflow-y-scroll">
+					<div className="bg-yellow-200 ">
+						{(messageByRoom[currentRoomId ?? ""] ?? []).length > 0
+							? (messageByRoom[currentRoomId ?? ""] ?? []).map((item :ChatMessage) => (
+									<MessageBlock
+										key={item.id}
+										userId={item.userId}
+										name={item.name}
+										message={item.message}
+										time={item.time}
+										className={ item.userId ===userId?.id! ? " bg-green-400":"bg-red-500"}
+
+									/>
+								))
+							: "NO Messages for this room"}
 					</div>
-					<div className="absolute bottom-0  ">
+
+					<div className="absolute bottom-0  bg-amber-700  ">
 						<div className=" space-x-2  ">
 							<input
 								type="text"
@@ -118,7 +138,7 @@ function ShowMessage() {
 						</div>
 					</div>
 				</div>
-			</>
+			</div>
 		);
 }
 

@@ -19,7 +19,7 @@ const userDetail=create<UserDetails>((set)=>({
    userId:null,
    username:"",
    email:"",
-   setUserId:(id:string)=>set(()=>({userId:id})),
+   setUserId:(id:string)=>set((state)=>({userId:state.userId=id})),
    setDetails:(data:UserData)=>set(()=>({username:data.username,
       email:data.email
    }))
