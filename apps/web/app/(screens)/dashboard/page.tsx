@@ -9,6 +9,8 @@ import userDetail from "../../store/hooks/userDetails";
 import axios from "axios";
 import allMessage from "../../store/hooks/allMessage";
 import { nanoid } from "nanoid";
+import RoomHeading from "../../component/RoomHeading";
+import SendMessage from "../../component/SendMessage";
 
 interface RoomList {
   roomName: string;
@@ -134,24 +136,27 @@ function Dashboard() {
   }, []);
 
   return (
-    <>
-      <div className="flex flex-col h-screen">
-        <h1 className="text-2xl">hi there from chat app dashboard</h1>
+		<>
+			<div className="bg-black/60">
+				<div className="grid grid-cols-4 flex-1 overflow-hidden ">
+					<div className="flex flex-col">
+						<h1 className="text-4xl mb-5.5 font-bold ">PaaPay Chat</h1>
+						<CreateRoom />
+						<JoinRoom />
+						<ListRooms classes={"overflow-y-auto border-1"} />
+					</div>
 
-        <div className="grid grid-cols-2">
-          <CreateRoom />
-          <JoinRoom />
-        </div>
-
-        <div className="grid grid-cols-4 flex-1 overflow-hidden pt-10  ">
-          <ListRooms classes={"overflow-y-auto border-1"} />
-          <div className="col-span-3 relative overflow-y-auto border-1 ">
-            <ShowMessage />
-          </div>
-        </div>
-      </div>
-    </>
-  );
+					<div className="flex flex-col h-screen w-full col-span-3">
+						<RoomHeading />
+						<div className="relative overflow-y-auto border-1 w-full h-screen ">
+							<ShowMessage />
+						</div>
+						<SendMessage />
+					</div>
+				</div>
+			</div>
+		</>
+	);
 }
 
 export default Dashboard;

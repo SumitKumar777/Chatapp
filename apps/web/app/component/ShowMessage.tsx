@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import useSocket from "../store/hooks/useSocket";
 import MessageBlock from "./MessageBlock";
 import axios from "axios";
@@ -25,8 +25,6 @@ type ChatMessage = {
 function ShowMessage() {
 
 	const messageByRoom=allMessage((state)=>state.messageByRoom);
-   const [userMessage,setUserMessage]=useState("");
-   const socket=useSocket((state)=>state.socket);
    const currentRoomId=useSocket((state)=>state.currentRoomId);
 	const userId=userDetail((state)=>state.userId);
 
@@ -59,55 +57,12 @@ function ShowMessage() {
 	},[currentRoomId])
 
 
-   const handleSendMessage=async()=>{
-
-      if(!userMessage){
-         console.log(userMessage);
-         console.log("message is empty");
-         return ;
-      }
-      try {
-         // Send request to the backend and then to websocket server which will then broadcast the message to all the connected user ;
-       
-         const data={
-            roomId:currentRoomId,
-            message:userMessage
-         }
-         const sendMessage = await axios.post(
-						`${process.env.NEXT_PUBLIC_BACKEND_URL}/message`,data,
-                  {withCredentials:true}
-					);
-            if(!sendMessage){
-               console.log(sendMessage,"sendMessageresponse from backend in handleSendMessage");
-            }
-
-       if(socket && socket.readyState===WebSocket.OPEN){
-           socket?.send(
-							JSON.stringify({
-								type: "message",
-								roomId: currentRoomId,
-								message: userMessage,
-							})
-						);
-       }else{
-         console.log("socket is present or socket is not open in sending message ")
-       }
-
-      } catch (error:unknown) {
-         if(error instanceof Error){
-            console.log("error in handleSendMessage",error.message)
-         }else{
-            console.log("unexpected error in the handleSendMessage",error)
-         }
-      }
-   }
-
 
 
    return (
 			<div className="relative">
 				<div className="overflow-y-scroll">
-					<div className="bg-yellow-200 ">
+					<div className="text-white  ">
 						{(messageByRoom[currentRoomId ?? ""] ?? []).length > 0
 							? (messageByRoom[currentRoomId ?? ""] ?? []).map((item :ChatMessage) => (
 									<MessageBlock
@@ -116,27 +71,14 @@ function ShowMessage() {
 										name={item.name}
 										message={item.message}
 										time={item.time}
-										className={ item.userId ===userId?.id! ? " bg-green-400":"bg-red-500"}
+										className={ item.userId ===userId?.id! ? " bg-pink-600 ":"bg-black/50 "}
 
 									/>
 								))
 							: "NO Messages for this room"}
 					</div>
 
-					<div className="absolute bottom-0  bg-amber-700  ">
-						<div className=" space-x-2  ">
-							<input
-								type="text"
-								placeholder="Enter message"
-								className=" border-2   "
-								value={userMessage}
-								onChange={(e) => setUserMessage(e.target.value)}
-							/>
-							<button onClick={() => handleSendMessage()} className="border-2">
-								Send
-							</button>
-						</div>
-					</div>
+				
 				</div>
 			</div>
 		);

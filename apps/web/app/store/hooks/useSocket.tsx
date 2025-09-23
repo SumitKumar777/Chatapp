@@ -23,16 +23,6 @@ interface CurrentMessage{
 }
 
 
-      //  u.socket.send(
-		// 			JSON.stringify({
-		// 				roomId,
-		// 				userId: user.userId,
-		// 				name: user.username,
-		// 				time: new Date().toString(),
-		// 				message,
-		// 			})
-		// 		);
-
 
 interface UserSocket {
 	socket: WebSocket | null;

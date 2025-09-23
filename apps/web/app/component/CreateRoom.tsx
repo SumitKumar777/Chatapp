@@ -8,6 +8,7 @@ function CreateRoom() {
    const setRoom=useSocket((state)=>state.setRoom);
    const setCurrentRoomId=useSocket((state)=>state.setCurrentRoomId);
    const createRoom=async(e:React.FormEvent<HTMLFormElement>)=>{
+      const formObj=e.currentTarget;
      try {
        e.preventDefault();
 				const form = new FormData(e.currentTarget);
@@ -45,7 +46,7 @@ function CreateRoom() {
             throw new Error("error in create Room in sending create request to websocket server");
          }
 
-         e.currentTarget.reset();
+      formObj.reset();
          
      } catch (error:unknown) {
 
@@ -62,13 +63,13 @@ function CreateRoom() {
 						error
 					);
       }
-      e.currentTarget.reset();
+   formObj.reset();
      }
      
    }
    return ( 
       <>
-      <div className="bg-red-400">
+      <div className="bg-amber-100 rounded-md">
          <form onSubmit={createRoom}>
             <label htmlFor="roomName">
                Enter room Name
