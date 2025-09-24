@@ -3,11 +3,23 @@
 import axios from "axios";
 import useSocket from "../store/hooks/useSocket";
 
+
 function CreateRoom() {
+
+
+
    const socket =useSocket((state=>state.socket));
    const setRoom=useSocket((state)=>state.setRoom);
    const setCurrentRoomId=useSocket((state)=>state.setCurrentRoomId);
+   const setCurrentRoomName=useSocket((state)=>state.setCurrentRoomName);
+
+
+
+
+
+
    const createRoom=async(e:React.FormEvent<HTMLFormElement>)=>{
+      const formObj=e.currentTarget;
      try {
        e.preventDefault();
 				const form = new FormData(e.currentTarget);
@@ -32,6 +44,7 @@ function CreateRoom() {
             roomName:createRoomResponse.data.data.name,
             roomId:createRoomResponse.data.data.id
          }
+         
          if(socket && socket.readyState===WebSocket.OPEN){
               socket?.send(
 								JSON.stringify({
@@ -40,12 +53,14 @@ function CreateRoom() {
 								})
 							);
                      setCurrentRoomId(createRoomResponse.data.data.id);
+                      setCurrentRoomName(createRoomResponse.data.data.name);
+                     
                      setRoom(roomData);
          }else{
             throw new Error("error in create Room in sending create request to websocket server");
          }
 
-         e.currentTarget.reset();
+      formObj.reset();
          
      } catch (error:unknown) {
 
@@ -62,26 +77,37 @@ function CreateRoom() {
 						error
 					);
       }
-      e.currentTarget.reset();
+   formObj.reset();
      }
      
    }
-   return ( 
-      <>
-      <div className="bg-red-400">
-         <form onSubmit={createRoom}>
-            <label htmlFor="roomName">
-               Enter room Name
-               <br />
-               <input type="text" name="roomName" className="border-2" required  />
-            </label>
-            <br />
-            <button type="submit">Create Room</button>
+   return (
+			<>
+				<div className="bg-blue-500/30 rounded-lg p-2">
+					<form onSubmit={createRoom} className="space-x-4">
+						<label htmlFor="roomName " className="text-2xl ">
+							Create Room
+							<br />
+							<input
+								type="text"
+								name="roomName"
+								className="border-2 p-1"
+								required
+								placeholder="Enter Room name"
+							/>
+						</label>
+						<button
+							type="submit"
+							className="bg-black/30 rounded-md p-2 text-md text-amber-50"
+						>
+							Create
+						</button>
 
-         </form>
-      </div>
-      </>
-    );
+
+					</form>
+				</div>
+			</>
+		);
 }
 
 export default CreateRoom;

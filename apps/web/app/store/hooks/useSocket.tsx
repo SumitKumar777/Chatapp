@@ -23,24 +23,15 @@ interface CurrentMessage{
 }
 
 
-      //  u.socket.send(
-		// 			JSON.stringify({
-		// 				roomId,
-		// 				userId: user.userId,
-		// 				name: user.username,
-		// 				time: new Date().toString(),
-		// 				message,
-		// 			})
-		// 		);
-
 
 interface UserSocket {
 	socket: WebSocket | null;
 	currentRoomId: string | null;
+	currentRoomName:string|null;
 	rooms: Rooms[];
 	message: UserData[];
 	currentMessage:CurrentMessage[];
-	setSocket: (connect: WebSocket) => void;
+	setSocket: (connect: WebSocket|null) => void;
 	setMessage: (data: UserData) => void;
    deleteMessage:(roomId:string)=>void;
 	setCurrentMessage:(messages:CurrentMessage[])=>void;
@@ -49,6 +40,7 @@ interface UserSocket {
    addRoom:(allRooms:Rooms[])=>void;
 	deleteRoom: (roomId: string) => void;
 	setCurrentRoomId: (roomId: string) => void;
+	setCurrentRoomName:(roomName:string)=>void;
 }
 
 
@@ -56,10 +48,11 @@ interface UserSocket {
 const useSocket = create<UserSocket>((set) => ({
 	socket: null,
 	currentRoomId: "",
+	currentRoomName:"",
 	rooms: [],
 	message: [],
 	currentMessage:[],
-	setSocket: (connect: WebSocket) => set(() => ({ socket: connect })), 
+	setSocket: (connect: WebSocket|null) => set(() => ({ socket: connect })), 
 	setMessage: (data: UserData) =>
 		set((state) => ({ message: [...state.message, data] })),
 
@@ -73,6 +66,7 @@ const useSocket = create<UserSocket>((set) => ({
 		})),
    addRoom:(allRooms:Rooms[])=>set(()=>({rooms:allRooms})),
 	setCurrentRoomId: (roomId: string) => set(() => ({ currentRoomId: roomId })),
+	setCurrentRoomName:(roomName:string)=>set(()=>({currentRoomName:roomName}))
 }));
 
 export default useSocket;

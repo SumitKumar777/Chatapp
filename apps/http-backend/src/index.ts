@@ -184,14 +184,27 @@ app.post("/joinroom",authUser,async(req:Request<RoomParams>,res:Response)=>{
          where:{
             roomId:parsed.data.roomId as string,
             userId:userId as string
+         },
+         include:{
+            room:{
+               select:{
+                  name:true
+               }
+            }
          }
       })
       let joinUser;
       if(!foundUser){
-         joinUser=await prisma.roomMember.create({
+          joinUser=await prisma.roomMember.create({
             data:{
                roomId:parsed.data.roomId,
                userId:userId as string
+            },include:{
+               room:{
+                  select:{
+                     name:true
+                  }
+               }
             }
          })
          return res.status(200).json({status:"succes",message:"user added to room",data:joinUser})

@@ -6,6 +6,7 @@ interface UserDetails{
    username:string,
    email:string,
    setUserId:(id:string)=>void,
+   setUserName:(username:string)=>void,
    setDetails:(data:UserData)=>void,
 }
 interface UserData{
@@ -19,7 +20,8 @@ const userDetail=create<UserDetails>((set)=>({
    userId:null,
    username:"",
    email:"",
-   setUserId:(id:string)=>set((state)=>({userId:state.userId=id})),
+   setUserId:(id:string)=>set(()=>({userId:id})),
+   setUserName:(username:string)=>set(()=>({username:username})),
    setDetails:(data:UserData)=>set(()=>({username:data.username,
       email:data.email
    }))
