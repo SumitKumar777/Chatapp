@@ -1,11 +1,13 @@
 "use client"
 
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import useSocket from "../store/hooks/useSocket";
-import MessageBlock from "./MessageBlock";
+
 import axios from "axios";
 import allMessage from "../store/hooks/allMessage";
 import userDetail from "../store/hooks/userDetails";
+import SentMessage from "./SentMessage";
+import ReceivedMessage from "./ReceivedMessage";
 
 
 type ChatMessage = {
@@ -27,8 +29,8 @@ function ShowMessage() {
 	const messageByRoom=allMessage((state)=>state.messageByRoom);
    const currentRoomId=useSocket((state)=>state.currentRoomId);
 	const userId=userDetail((state)=>state.userId);
-
 	const setMessage=allMessage((state)=>state.setMessage);
+	const scrollRef=useRef<HTMLDivElement>(null);
 
 
 
@@ -48,37 +50,49 @@ function ShowMessage() {
 		}
 
 
-
-
 		if(currentRoomId){
 			fetchMessage(currentRoomId);
 		}
 
+	
+
 	},[currentRoomId])
 
+	useEffect(() => {
+		if (scrollRef.current) {
+			scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
+		}
+	}, [messageByRoom]);
 
 
 
    return (
 			<div className="relative">
-				<div className="overflow-y-scroll">
-					<div className="text-white  ">
+				<div className="overflow-y-scroll scroll-smooth h-screen"
+				ref={scrollRef}
+				>
+					<div className="text-white py-1 px-6 ">
 						{(messageByRoom[currentRoomId ?? ""] ?? []).length > 0
-							? (messageByRoom[currentRoomId ?? ""] ?? []).map((item :ChatMessage) => (
-									<MessageBlock
-										key={item.id}
-										userId={item.userId}
-										name={item.name}
-										message={item.message}
-										time={item.time}
-										className={ item.userId ===userId?.id! ? " bg-pink-600 ":"bg-black/50 "}
-
-									/>
-								))
+							? (messageByRoom[currentRoomId ?? ""] ?? []).map(
+									(item: ChatMessage) =>
+										item.userId === userId ? (
+											<SentMessage
+												key={item.id}
+												name={item.name}
+												time={item.time}
+												message={item.message}
+											/>
+										) : (
+											<ReceivedMessage
+												key={item.id}
+												name={item.name}
+												time={item.time}
+												message={item.message}
+											/>
+										)
+								)
 							: "NO Messages for this room"}
 					</div>
-
-				
 				</div>
 			</div>
 		);

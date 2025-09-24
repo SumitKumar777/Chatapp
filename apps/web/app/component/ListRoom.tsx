@@ -6,14 +6,21 @@ function ListRooms({classes}:{classes:string}) {
    const room=useSocket((state)=>state.rooms);
    console.log(room,"listroom");
 
-   return ( 
-      <>
-      <div className={`${classes} overflow-y-scroll`} >
-
-         {room.length!==0 ? room.map((item)=><RoomBlock key={item.roomId} roomName={item.roomName} roomId={item.roomId} />):"No Room Present connect to room or join room to start chatting "}
-      </div>
-      </>
-    );
+   return (
+			<>
+				<div className={`${classes}  scroll-smooth pt-4 `}>
+					{room.length !== 0
+						? room.map((item) => (
+								<RoomBlock
+									key={item.roomId}
+									roomName={item.roomName}
+									roomId={item.roomId}
+								/>
+							))
+						: "No Room Present connect to room or join room to start chatting "}
+				</div>
+			</>
+		);
 }
 
 export default ListRooms;

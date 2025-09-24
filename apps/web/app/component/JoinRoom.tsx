@@ -7,6 +7,7 @@ function JoinRoom() {
 	const setRoom=useSocket((state)=>state.setRoom)
 	const socket=useSocket((state)=>state.socket);
 	const setCurrentRoomId=useSocket((state)=>state.setCurrentRoomId);
+	const setCurrentRoomName=useSocket((state)=>state.setCurrentRoomName);
 	const joinRoom = async (e: React.FormEvent<HTMLFormElement>) => {
 		try {
 			e.preventDefault();
@@ -37,7 +38,9 @@ function JoinRoom() {
 									roomId: roomId,
 								})
 							);
-							setCurrentRoomId(roomId as string)
+							setCurrentRoomId(roomId as string);
+							setCurrentRoomName(joinRoomResponse.data.data.room.name);
+							
                      setRoom(roomData);
 			}else{
 				 console.log("Socket not ready yet, cannot join room");
@@ -56,15 +59,25 @@ function JoinRoom() {
 	};
 	return (
 		<>
-			<div className="bg-amber-200 ">
-				<form onSubmit={joinRoom} className="">
-					<label htmlFor="roomId">
-						Enter room Id
+			<div className="bg-blue-500/50 rounded-lg p-2">
+				<form onSubmit={joinRoom} className="space-x-4">
+					<label htmlFor="roomId " className="text-2xl ">
+						Join Room
 						<br />
-						<input type="text" name="roomId" className="border-2" required />
+						<input
+							type="text"
+							name="roomId"
+							className="border-2 p-1"
+							required
+							placeholder="Enter Room name"
+						/>
 					</label>
-					<br />
-					<button type="submit">Join Room</button>
+					<button
+						type="submit"
+						className="bg-black/30 rounded-md p-2 text-md text-amber-50"
+					>
+						Join
+					</button>
 				</form>
 			</div>
 		</>

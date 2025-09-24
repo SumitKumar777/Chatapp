@@ -11,6 +11,7 @@ function RoomBlock({roomName,roomId}:Rooms) {
 	const deleteRoom=useSocket((state)=>state.deleteRoom);
 	const deleteMessage=useSocket((state)=>state.deleteMessage);
 	const currentRoomId=useSocket((state)=>state.currentRoomId);
+	const setCurrentRoomName=useSocket((state)=>state.setCurrentRoomName);
 
 	// when the user click on delete room first it should make call to the backend and then to webSocket backend and then remove from the dom 
 
@@ -90,18 +91,33 @@ function RoomBlock({roomName,roomId}:Rooms) {
   
    return (
 			<div
-				className={`flex mb-1 justify-end ${currentRoomId===roomId ? "bg-purple-600":"bg-purple-800"} text-white`}
-				onClick={() => setCurrentRoomId(roomId)}
+				className={`flex mb-1 justify-end ${currentRoomId === roomId ? "bg-black/80" : "bg-black/40"} text-white rounded-md mx-1`}
+				onClick={() => {
+					setCurrentRoomId(roomId);
+					setCurrentRoomName(roomName);
+				}}
 			>
-				<div>
-					<h1>{roomName}</h1>
-					<p>{roomId}</p>
+				<div className="pl-2">
+					<h1 className="text-xl font-medium ">{roomName[0]?.toUpperCase()}{roomName.slice(1)}</h1>
+					<p className="text-md">{roomId}</p>
 				</div>
-				<div>
-					<button onClick={() => leaveRoom()} className="bg-blue-500">
+				<div className="space-y-1">
+					<button
+						onClick={(e) => {
+							e.stopPropagation();
+							leaveRoom();
+						}}
+						className="bg-blue-500 p-1 rounded-md"
+					>
 						Leave
 					</button>
-					<button onClick={() => handleDelete()} className="bg-blue-400">
+					<button
+						onClick={(e) => {
+							e.stopPropagation();
+							handleDelete();
+						}}
+						className="bg-blue-400 p-1 rounded-md"
+					>
 						Delete Room
 					</button>
 				</div>

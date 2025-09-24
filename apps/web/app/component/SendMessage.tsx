@@ -15,6 +15,7 @@ function SendMessage() {
 
     const handleSendMessage = async (e:React.FormEvent<HTMLFormElement>) => {
       e.preventDefault();
+		console.log("hiii from handlesend");
       const formObj=e.currentTarget;
       const formData= new FormData(formObj);
 
@@ -90,6 +91,7 @@ function SendMessage() {
 					<button
 						aria-label="Send message"
 						className=" p-2 rounded-xl bg-green-600 border-none flex justify-end items-center"
+						type="submit"
 					>
 						<Send />
 					</button>

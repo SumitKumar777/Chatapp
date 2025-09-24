@@ -5,17 +5,18 @@ import RoomHeadingBlock from "./RoomHeadingBlock";
 
 const RoomHeading=()=>{
    const currentRoomId=useSocket((state)=>state.currentRoomId);
-   const room=useSocket((state)=>state.rooms);
+	const currentRoomName=useSocket((state)=>state.currentRoomName);
+	console.log("roomname in the room Heading ",currentRoomName);
+	console.log("currentId in the room Heading ", currentRoomId);
+
    return (
 			<>
-				{room.forEach((item) =>
-					item.roomId === currentRoomId ? (
-						<RoomHeadingBlock roomId={item.roomId} roomName={item.roomName} />
-					) : null
-				) ?? (
+				{(currentRoomId && currentRoomName)? (
+					<RoomHeadingBlock roomId={currentRoomId} roomName={currentRoomName} />
+				) : (
 					<RoomHeadingBlock
-						roomName={"No Rooms"}
-						roomId={"create Rooms to get chat with friends"}
+						roomId={"Create/Join room to chat or see messages"}
+						roomName={"NO ROOMS"}
 					/>
 				)}
 			</>

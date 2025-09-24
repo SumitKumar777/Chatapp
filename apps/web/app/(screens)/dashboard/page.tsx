@@ -33,6 +33,8 @@ function Dashboard() {
 
   const addMessage = allMessage((state) => state.addMessage);
 
+  const setUserName = userDetail((state) => state.setUserName);
+
   useEffect(() => {
     const getTokenAndConnect = async () => {
       try {
@@ -45,7 +47,9 @@ function Dashboard() {
           const connection = new WebSocket(
             `ws://localhost:8080?token=${data.token}`,
           );
+          let hasOpened = false;
           connection.onopen = () => {
+            hasOpened = true;
             connection.send(JSON.stringify("hi there from frontend"));
           };
           connection.onmessage = (event) => {
@@ -61,7 +65,6 @@ function Dashboard() {
                 message: parseddData.message,
                 time: parseddData.time,
               };
-				  
 
               if (parseddData.roomId && parseddData) {
                 addMessage(parseddData.roomId, modifiedMessage);
@@ -81,7 +84,20 @@ function Dashboard() {
             }
           };
           connection.onclose = () => {
-            console.log("connection cloesed on dashboard ");
+            console.log("connection closed on dashboard ");
+            if (hasOpened) {
+              setSocket(null);
+            } else {
+              console.log(
+                "connection closed without opening, likely auth failed",
+              );
+            }
+          };
+          connection.onerror = (error) => {
+            console.log("error in connection", error);
+            if (hasOpened) {
+              setSocket(null);
+            }
           };
 
           const roomList = await axios.get<RommListResponse>(
@@ -117,7 +133,10 @@ function Dashboard() {
           setSocket(connection);
 
           // i want to store userId as a string but it is getting stored as object if i set data.data.id the and remove the accessing of userId
-          setUserId(data.id);
+          console.log(data.id, "userId setting in dashboard");
+          setUserId(data.id.id);
+          setUserName(data.id.username);
+
           console.log("roomList", roomList.data.data);
           if (roomList.data.data.length !== 0) {
             addRoom(roomList.data.data);
@@ -130,33 +149,37 @@ function Dashboard() {
         console.log("error in useeffect dashboard", error);
       }
     };
-    if (!socket) {
+    console.log("outside the useeffect of socket", socket);
+    if (!socket && socket === null) {
+      console.log("inside socket of the dashboard", socket);
       getTokenAndConnect();
     }
-  }, []);
+  }, [socket]);
 
   return (
-		<>
-			<div className="bg-black/60">
-				<div className="grid grid-cols-4 flex-1 overflow-hidden ">
-					<div className="flex flex-col">
-						<h1 className="text-4xl mb-5.5 font-bold ">PaaPay Chat</h1>
-						<CreateRoom />
-						<JoinRoom />
-						<ListRooms classes={"overflow-y-auto border-1"} />
-					</div>
+    <>
+      <div className="bg-black/60">
+        <div className="grid grid-cols-4 flex-1 overflow-hidden ">
+          <div className="flex flex-col h-screen ">
+            <h1 className="text-4xl mb-5.5 font-bold ">PaaPay Chat</h1>
+            <div className="px-2">
+              <CreateRoom />
+              <JoinRoom />
+            </div>
+            <ListRooms classes={"overflow-y-scroll border-1 h-full"} />
+          </div>
 
-					<div className="flex flex-col h-screen w-full col-span-3">
-						<RoomHeading />
-						<div className="relative overflow-y-auto border-1 w-full h-screen ">
-							<ShowMessage />
-						</div>
-						<SendMessage />
-					</div>
-				</div>
-			</div>
-		</>
-	);
+          <div className="flex flex-col h-screen w-full col-span-3">
+            <RoomHeading />
+            <div className="relative overflow-y-auto border-1 w-full h-screen ">
+              <ShowMessage />
+            </div>
+            <SendMessage />
+          </div>
+        </div>
+      </div>
+    </>
+  );
 }
 
 export default Dashboard;
