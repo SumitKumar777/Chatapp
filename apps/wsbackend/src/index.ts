@@ -213,8 +213,7 @@ wss.on("connection", (ws, request) => {
     return;
   }
   allUser.set(ws, { userId: user.userId, username: user.username });
-
-  // Correct the types of data in this
+  
   ws.on("message", (data: string) => {
     try {
       const parsedData: RequestBody = JSON.parse(data);
