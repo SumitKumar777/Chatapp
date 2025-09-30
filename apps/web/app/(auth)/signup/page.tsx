@@ -86,7 +86,6 @@ const SignUp=()=>{
         />
       </div>
 
-
       <button
         type="submit"
         className="w-full py-2 px-4 rounded-md bg-blue-600 dark:bg-blue-500 text-white font-semibold hover:bg-blue-700 dark:hover:bg-blue-600 transition-colors duration-300"
