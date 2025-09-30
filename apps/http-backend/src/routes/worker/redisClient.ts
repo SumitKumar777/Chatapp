@@ -2,19 +2,19 @@
 import { createClient ,RedisClientType } from "redis";
 
 
-const client:RedisClientType=createClient();
+const producerClient:RedisClientType=createClient();
 
-client.on("error",(err)=>{
-   console.log("error in redis client",err)
+producerClient.on("error",(err)=>{
+   console.log("error in redis producerClient",err)
 })
 
 
 async function connectClient(){
-   if(!client.isOpen){
-      await client.connect();
+   if(!producerClient.isOpen){
+      await producerClient.connect();
       console.log("client connected");
    }
 
 }
 
-export {client,connectClient};
+export {producerClient,connectClient};
