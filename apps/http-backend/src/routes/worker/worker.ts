@@ -4,6 +4,8 @@
 import { createClient } from "redis";
 import prisma from "../../../../../packages/db/dist/index.js";
 
+import { producerClient } from "./redisClient.js";
+
 const client=createClient();
 client.on("error",(err)=>console.log("error in worker client"));
 
@@ -20,13 +22,24 @@ const startWorker=async ()=>{
             if(msgRequest?.element){
                const { userId, roomId, message } = JSON.parse(msgRequest?.element);
 
-               await prisma.chat.create({
+              const messageData= await prisma.chat.create({
                   data:{
                      userId,
                      roomId,
                      message
+                  },
+                  include:{
+                     user:{
+                        select:{
+                           username:true
+                        }
+                     }
                   }
                })
+
+               const cachedMessage=JSON.stringify({userId,id:messageData.id.toString(),name:messageData.user.username,message,time:messageData.createdAt.toString()})
+               
+               await producerClient.rPush(`roomChats:${roomId}`,cachedMessage)
             }
 
          } catch (error) {
