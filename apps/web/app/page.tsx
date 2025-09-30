@@ -1,13 +1,11 @@
-
-
-
+import LandingPage from "./component/LandingPage";
+import LandingPageNavbar from "./component/LandingPageNavbar";
 
 export default function Home() {
-
-  return <>
-  <div className="border-2">
-    We Chat 
-    <h1>Chat in real time without any delay</h1>
-  </div>
-  </>
+  return (
+    <div className="h-screen bg-black/60 flex flex-col">
+      <LandingPageNavbar />
+      <LandingPage />
+    </div>
+  );
 }
