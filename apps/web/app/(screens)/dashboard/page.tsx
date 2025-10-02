@@ -11,6 +11,7 @@ import allMessage from "../../store/hooks/allMessage";
 import { nanoid } from "nanoid";
 import RoomHeading from "../../component/RoomHeading";
 import SendMessage from "../../component/SendMessage";
+import userUtils from "../../store/hooks/userUtils";
 
 interface RoomList {
   roomName: string;
@@ -30,10 +31,11 @@ function Dashboard() {
   const setUserId = userDetail((state) => state.setUserId);
   const addRoom = useSocket((state) => state.addRoom);
   const setCurrentRoomId = useSocket((state) => state.setCurrentRoomId);
+  const setCurrentRoomName = useSocket((state) => state.setCurrentRoomName);
 
   const addMessage = allMessage((state) => state.addMessage);
-
   const setUserName = userDetail((state) => state.setUserName);
+  const sidebarState=userUtils((state)=>state.sidebarState);
 
   useEffect(() => {
     const getTokenAndConnect = async () => {
@@ -142,6 +144,7 @@ function Dashboard() {
             addRoom(roomList.data.data);
             if (roomList.data.data[0]?.roomId) {
               setCurrentRoomId(roomList.data.data[0]?.roomId);
+              setCurrentRoomName(roomList.data.data[0]?.roomName);
             }
           }
         }
@@ -157,29 +160,31 @@ function Dashboard() {
   }, [socket]);
 
   return (
-    <>
-      <div className="bg-black/60">
-        <div className="grid grid-cols-4 flex-1 overflow-hidden ">
-          <div className="flex flex-col h-screen ">
-            <h1 className="text-4xl mb-5.5 font-bold ">PaaPay Chat</h1>
-            <div className="px-2">
-              <CreateRoom />
-              <JoinRoom />
-            </div>
-            <ListRooms classes={"overflow-y-scroll border-1 h-full"} />
-          </div>
+		<>
+			<div className="bg-black/60 w-full">
+				<div className="grid grid-cols-1 md:grid-cols-4 flex-1 overflow-hidden w-full">
+					<div
+						className={`flex flex-col h-screen ${sidebarState ? "hidden":null} md:block md:col-span-1`}
+					>
+						<h1 className="text-4xl mb-5.5 font-bold pl-4 ">PaaPay Chat</h1>
+						<div className="pl-4 space-x-4  ">
+							<CreateRoom />
+							<JoinRoom />
+						</div>
+						<ListRooms classes={"overflow-y-scroll border-1 h-full pl-2"} />
+					</div>
 
-          <div className="flex flex-col h-screen w-full col-span-3">
-            <RoomHeading />
-            <div className="relative overflow-y-auto border-1 w-full h-screen ">
-              <ShowMessage />
-            </div>
-            <SendMessage />
-          </div>
-        </div>
-      </div>
-    </>
-  );
+					<div className="flex flex-col h-screen w-full col-span-1 md:col-span-3">
+						<RoomHeading />
+						<div className="relative overflow-y-auto border-1 w-full h-screen ">
+							<ShowMessage />
+						</div>
+						<SendMessage />
+					</div>
+				</div>
+			</div>
+		</>
+	);
 }
 
 export default Dashboard;

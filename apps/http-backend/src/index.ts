@@ -237,9 +237,9 @@ app.post("/joinroom",authUser,async(req:Request<RoomParams>,res:Response)=>{
             }
          }
       })
-      let joinUser;
+
       if(!foundUser){
-          joinUser=await prisma.roomMember.create({
+         const joinUser=await prisma.roomMember.create({
             data:{
                roomId:parsed.data.roomId,
                userId:userId as string
@@ -251,8 +251,9 @@ app.post("/joinroom",authUser,async(req:Request<RoomParams>,res:Response)=>{
                }
             }
          })
+         console.log(joinUser,"joinuser in joinroom")
          await producerClient.del(`roomList:${userId}`)
-         return res.status(200).json({status:"succes",message:"user added to room",data:joinUser})
+         return res.status(200).json({status:"succes",message:"user not added to room",data:joinUser})
       }
       return res.status(200).json({ status: "succes", message: "user added to room", data: foundUser })
 
@@ -287,7 +288,7 @@ app.get("/searchRoom/:searchRoomName",authUser,async (req:Request,res:Response)=
          where: {
 
             name: {
-               contains: roomName,
+               startsWith: roomName,
                mode: "insensitive" 
             },
 
@@ -297,6 +298,11 @@ app.get("/searchRoom/:searchRoomName",authUser,async (req:Request,res:Response)=
                }
             }
          },
+         select:{
+            id:true,
+            name:true,
+            createdAt:true
+         }
       });
 
 

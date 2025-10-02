@@ -15,12 +15,13 @@ function SendMessage() {
 
     const handleSendMessage = async (e:React.FormEvent<HTMLFormElement>) => {
       e.preventDefault();
-		console.log("hiii from handlesend");
+
       const formObj=e.currentTarget;
       const formData= new FormData(formObj);
 
       const userMessage = formData.get("chatMessage");
-			if (!userMessage) {
+		
+			if (!userMessage || userMessage===" ") {
 				console.log(userMessage);
 				console.log("message is empty");
 				return;
@@ -82,11 +83,11 @@ function SendMessage() {
 					className=" space-x-10 flex text-white  "
 					onSubmit={handleSendMessage}
 				>
-					<input
-						type="text"
+					<textarea
 						placeholder="Enter message"
-						className="   w-full p-2 rounded-xl  bg-black/50 "
 						name="chatMessage"
+						className="w-full p-2 rounded-xl bg-black/50 text-white resize-none outline-none"
+						rows={1}
 					/>
 					<button
 						aria-label="Send message"

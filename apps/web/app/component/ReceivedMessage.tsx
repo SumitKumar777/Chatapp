@@ -27,7 +27,7 @@ function ReceivedMessage({
 							{name[0]?.toUpperCase()}
 							{name.slice(1)}
 						</p>
-						<p className={` space-x-2 text-xl p-2 inline-block rounded-2xl font-semibold bg-black/40`}>
+						<p className={` space-x-2 text-xl p-2 inline-block rounded-2xl font-semibold bg-black/40 break-words`}>
 							{" "}
 							{message}
 						</p>
