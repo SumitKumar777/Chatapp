@@ -411,38 +411,7 @@ app.post("/message",authUser,async(req:Request,res:Response)=>{
 })
 
 
-// Get all the rooms and their chats in single fetch ;
 
-app.get("/userstate",authUser,async(req,res)=>{
-   try {
-      const userId = req.userId;
-      if (!userId) {
-         throw new Error("user id is not present");
-      }
-
-      const userData=await prisma.user.findUnique({
-         where:{
-            id:userId
-         },
-         include:{
-            rooms:true,
-            chats:true,
-            memberships:true,
-         }
-      })
-
-      if(!userData){
-         throw new Error("user data is not present");
-      }
-      return res.status(200).json({status:"success",message:"all the user data",data:userData});
-
-   } catch (error) {
-      console.log(error,"error in getting the state of the user");
-      return res.status(500).json({status:"failed",message:"failed to get user data",error})
-   }
-   
-
-})
 
 // Fetch all the Rooms that the user joined in 
 
