@@ -2,6 +2,7 @@
 
 import axios from "axios";
 import useSocket, { Rooms } from "../store/hooks/useSocket";
+import userUtils from "../store/hooks/userUtils";
 
 
 function RoomBlock({roomName,roomId}:Rooms) {
@@ -12,6 +13,7 @@ function RoomBlock({roomName,roomId}:Rooms) {
 	const deleteMessage=useSocket((state)=>state.deleteMessage);
 	const currentRoomId=useSocket((state)=>state.currentRoomId);
 	const setCurrentRoomName=useSocket((state)=>state.setCurrentRoomName);
+	const setSidebarState=userUtils((state)=>state.setSidebarState);
 
 	// when the user click on delete room first it should make call to the backend and then to webSocket backend and then remove from the dom 
 
@@ -91,10 +93,11 @@ function RoomBlock({roomName,roomId}:Rooms) {
   
    return (
 			<div
-				className={`flex mb-1 justify-end ${currentRoomId === roomId ? "bg-black/80" : "bg-black/40"} text-white rounded-md mx-1`}
+				className={`flex mb-1 justify-between ${currentRoomId === roomId ? "bg-black/80" : "bg-black/40"} text-white rounded-md mx-1 p-1`}
 				onClick={() => {
 					setCurrentRoomId(roomId);
 					setCurrentRoomName(roomName);
+					setSidebarState(true);
 				}}
 			>
 				<div className="pl-2">

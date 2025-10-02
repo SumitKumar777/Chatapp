@@ -1,85 +1,59 @@
 "use client";
 
-import axios from "axios";
-import useSocket from "../store/hooks/useSocket";
+
+
+import { Dialog } from "radix-ui";
+import { Users } from "lucide-react";
+import SearchRoom from "./SearchRoom";
+import useRoom from "../store/hooks/useRoom";
 
 function JoinRoom() {
-	const setRoom=useSocket((state)=>state.setRoom)
-	const socket=useSocket((state)=>state.socket);
-	const setCurrentRoomId=useSocket((state)=>state.setCurrentRoomId);
-	const setCurrentRoomName=useSocket((state)=>state.setCurrentRoomName);
-	const joinRoom = async (e: React.FormEvent<HTMLFormElement>) => {
-		try {
-			e.preventDefault();
-			const form = new FormData(e.currentTarget);
-
-			const roomId = form.get("roomId");
-			console.log(roomId, "roomId in the create rooomFrom");
-
-			console.log(`${process.env.NEXT_PUBLIC_BACKEND_URL}`, "backend");
-			const joinRoomResponse = await axios.post(
-				"http://localhost:3001/joinroom",
-				{
-					roomId,
-				},
-				{
-					withCredentials: true,
-				}
-			);
-			console.log("joinRoomResponse",joinRoomResponse );
-			 const roomData={
-            roomName:joinRoomResponse.data.data.name || " ",
-            roomId:roomId as string
-         }
-         if(socket && socket.readyState===WebSocket.OPEN){
-              socket?.send(
-								JSON.stringify({
-									type: "join_room",
-									roomId: roomId,
-								})
-							);
-							setCurrentRoomId(roomId as string);
-							setCurrentRoomName(joinRoomResponse.data.data.room.name);
-							
-                     setRoom(roomData);
-			}else{
-				 console.log("Socket not ready yet, cannot join room");
-			}
-			console.log("room joined by user")
-		} catch (error: unknown) {
-			if (error instanceof Error) {
-				console.log(error, "error in form of joining the room", error.message);
-			} else {
-				console.log(
-					error,
-					"unexpected error in form of joining the room",
-				);
-			}
-		}
-	};
+	 const joinRoomState = useRoom((state) => state.joinRoomState);
+		const setJoinRoomState = useRoom((state) => state.setJoinRoomState);
+	
 	return (
 		<>
-			<div className="bg-blue-500/50 rounded-lg p-2">
-				<form onSubmit={joinRoom} className="space-x-4">
-					<label htmlFor="roomId " className="text-2xl ">
-						Join Room
-						<br />
-						<input
-							type="text"
-							name="roomId"
-							className="border-2 p-1"
-							required
-							placeholder="Enter Room name"
-						/>
-					</label>
-					<button
-						type="submit"
-						className="bg-black/30 rounded-md p-2 text-md text-amber-50"
-					>
+			<Dialog.Root open={joinRoomState} onOpenChange={setJoinRoomState}>
+				<Dialog.Trigger asChild>
+					<button className="p-3 bg-black/40 text-white rounded-xl font-bold hover:bg-black/20">
+						{" "}
+						<Users className="inline mr-2"/>
 						Join
 					</button>
-				</form>
-			</div>
+				</Dialog.Trigger>
+
+				<Dialog.Portal>
+					<Dialog.Overlay className="DialogOverlay" />
+
+					<Dialog.Content className="DialogContent">
+						<Dialog.Title className=" text-2xl font-semibold">Join Room</Dialog.Title>
+
+						<Dialog.Description
+							id="create-dialog-description"
+							className="DialogDescription text-xl font-medium"
+						>
+							Enter a name of room you want to join.
+						</Dialog.Description>
+						<SearchRoom />
+
+						<Dialog.Close asChild>
+							<button type="button" className="Button gray w-full mt-4">
+								Cancel
+							</button>
+						</Dialog.Close>
+
+						{/* Close "X" button in corner */}
+						<Dialog.Close asChild>
+							<button
+								className="IconButton absolute top-2 right-2"
+								aria-label="Close"
+							>
+								✕
+							</button>
+						</Dialog.Close>
+					</Dialog.Content>
+				</Dialog.Portal>
+			</Dialog.Root>
 		</>
 	);
 }

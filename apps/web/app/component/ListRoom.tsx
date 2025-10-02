@@ -1,4 +1,4 @@
-"use client";
+
 import useSocket from "../store/hooks/useSocket";
 import RoomBlock from "./RoomBlock";
 
