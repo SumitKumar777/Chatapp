@@ -78,17 +78,17 @@ function CreateRoom() {
   return (
 		<>
 			<Dialog.Root open={open} onOpenChange={setOpen}>
-				<Dialog.Trigger asChild>
-					<button className=" p-3 bg-black/40 text-white rounded-xl font-bold hover:bg-black/20">
+				<Dialog.Trigger asChild >
+					<button className=" p-3 bg-black/40 text-white rounded-xl font-bold hover:bg-black/20 w-full ">
 						<Plus className="inline mr-2" />
 						Create Room
 					</button>
 				</Dialog.Trigger>
 
-				<Dialog.Portal>
+				<Dialog.Portal  >
 					<Dialog.Overlay className="DialogOverlay" />
 
-					<Dialog.Content className="DialogContent">
+					<Dialog.Content className="DialogContent ">
 						<Dialog.Title className="text-2xl font-semibold"> Create Room</Dialog.Title>
 
 						<Dialog.Description

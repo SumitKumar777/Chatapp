@@ -15,7 +15,7 @@ function JoinRoom() {
 		<>
 			<Dialog.Root open={joinRoomState} onOpenChange={setJoinRoomState}>
 				<Dialog.Trigger asChild>
-					<button className="p-3 bg-black/40 text-white rounded-xl font-bold hover:bg-black/20">
+					<button className="p-3 bg-black/40 text-white rounded-xl font-bold hover:bg-black/20 w-full " >
 						{" "}
 						<Users className="inline mr-2"/>
 						Join

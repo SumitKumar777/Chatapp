@@ -93,7 +93,7 @@ function RoomBlock({roomName,roomId}:Rooms) {
   
    return (
 			<div
-				className={`flex mb-1 justify-between ${currentRoomId === roomId ? "bg-black/80" : "bg-black/40"} text-white rounded-md mx-1 p-1`}
+				className={`flex mb-1 justify-between ${currentRoomId === roomId ? "bg-black/80" : "bg-black/40"} text-white rounded-md mx-1 p-1 hover:bg-black/80`}
 				onClick={() => {
 					setCurrentRoomId(roomId);
 					setCurrentRoomName(roomName);
