@@ -12,15 +12,19 @@ const RoomHeading=()=>{
 
    return (
 			<>
-			
-				{(currentRoomId || currentRoomName)? (
-					<RoomHeadingBlock roomId={currentRoomId  || ""} roomName={currentRoomName || ""} />
-				) : (
-					<RoomHeadingBlock
-						roomId={"Create/Join room to chat or see messages"}
-						roomName={"NO ROOMS"}
-					/>
-				)}
+
+					{currentRoomId || currentRoomName ? (
+						<RoomHeadingBlock
+							roomId={currentRoomId || ""}
+							roomName={currentRoomName || ""}
+						/>
+					) : (
+						<RoomHeadingBlock
+							roomId={"Create/Join room to chat or see messages"}
+							roomName={"NO ROOMS"}
+						/>
+					)}
+
 			</>
 		);
 

@@ -8,7 +8,7 @@ type ChatMessage = {
 
 
 
-function SentMessage({
+function 	SentMessage({
 	name,
 	message,
 	time,

@@ -50,7 +50,7 @@ function ShowMessage() {
   }, [messageByRoom]);
 
   return (
-    <div className="relative w-full">
+    <div className="relative  w-full">
       <div className="scroll-smooth" ref={scrollRef}>
         <div className="text-white py-1 px-6 ">
           {(messageByRoom[currentRoomId ?? ""] ?? []).length > 0

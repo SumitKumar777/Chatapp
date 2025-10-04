@@ -35,7 +35,7 @@ function Dashboard() {
 
   const addMessage = allMessage((state) => state.addMessage);
   const setUserName = userDetail((state) => state.setUserName);
-  const sidebarState=userUtils((state)=>state.sidebarState);
+  const isSidebarOpen = userUtils((state) => state.isSidebarOpen);
 
   useEffect(() => {
     const getTokenAndConnect = async () => {
@@ -160,33 +160,35 @@ function Dashboard() {
   }, [socket]);
 
   return (
-		<>
-			<div className="bg-black/60 w-full">
-				<div className="grid grid-cols-1 md:grid-cols-4 flex-1 overflow-hidden w-full">
-					<div
-						className={`flex flex-col h-screen ${sidebarState ? "hidden" : null} md:block md:col-span-1`}
-					>
-						<h1 className="text-4xl mb-5.5 font-bold pl-4 ">PaaPay Chat</h1>
-						<div className="pl-4 space-x-4 w-full flex ">
-							<CreateRoom />
-							<JoinRoom />
-						</div>
-						<ListRooms classes={"overflow-y-scroll border-1 h-full pl-2"} />
-					</div>
+    <>
+      <div className="bg-black/60 w-full">
+        <div className="grid grid-cols-1 md:grid-cols-4 flex-1 overflow-hidden w-full">
+          <div
+            className={`flex flex-col h-screen ${isSidebarOpen ? null : "hidden"} md:block md:col-span-1`}
+          >
+            <h1 className="text-4xl mb-5.5 font-bold pl-4 ">PaaPay Chat</h1>
+            <div className="pl-4 space-x-4 w-full flex ">
+              <CreateRoom />
+              <JoinRoom />
+            </div>
+            <ListRooms classes={"overflow-y-scroll border-1 h-full pl-2"} />
+          </div>
 
-					<div
-						className={` ${sidebarState ? "block":"hidden"} md:block flex flex-col h-screen w-full col-span-1 md:col-span-3`}
-					>
-						<RoomHeading />
-						<div className="relative overflow-y-auto border-1 w-full h-screen ">
-							<ShowMessage />
-						</div>
-						<SendMessage />
-					</div>
-				</div>
-			</div>
-		</>
-	);
+          <div
+            className={` ${isSidebarOpen ? "hidden" : "block"} md:block flex flex-col h-screen w-full col-span-1 md:col-span-3`}
+          >
+            <div className="h-full flex flex-col overflow-hidden justify-between">
+              <RoomHeading  />
+              <div className="relative overflow-y-auto border-1 w-full h-full ">
+                <ShowMessage />
+              </div>
+              <SendMessage className="h-fit" />
+            </div>
+          </div>
+        </div>
+      </div>
+    </>
+  );
 }
 
 export default Dashboard;
