@@ -1,15 +1,13 @@
 import { create } from "zustand";
 
-
-interface UserUtilsProps{
-   sidebarState:boolean,
-   setSidebarState:(value:boolean)=>void;
+interface UserUtilsProps {
+  isSidebarOpen: boolean;
+  setIsSidebarOpen: (value: boolean) => void;
 }
 
-
-const userUtils=create<UserUtilsProps>((set)=>({
-   sidebarState:false,
-   setSidebarState:(value:boolean)=>set(()=>({sidebarState:value}))
-}))
+const userUtils = create<UserUtilsProps>((set) => ({
+  isSidebarOpen: true,
+  setIsSidebarOpen: (value: boolean) => set(() => ({ isSidebarOpen: value })),
+}));
 
 export default userUtils;

@@ -7,7 +7,7 @@ import { Send } from "lucide-react";
 
 
 
-function SendMessage() {
+function SendMessage( {className}:{className:string}) {
 
 
    const socket = useSocket((state) => state.socket);
@@ -78,7 +78,7 @@ function SendMessage() {
 
       
    return (
-			<div className="border-1 p-4  ">
+			<div className={`border-1 p-4 flex-1 ${className}`}>
 				<form
 					className=" space-x-10 flex text-white  "
 					onSubmit={handleSendMessage}
