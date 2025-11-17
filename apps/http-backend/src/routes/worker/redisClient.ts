@@ -1,9 +1,10 @@
 
 import { createClient ,RedisClientType } from "redis";
+import dotenv from "dotenv";
 
+dotenv.config();
 
-const producerClient:RedisClientType=createClient();
-
+const producerClient: RedisClientType = createClient({ url: process.env.REDIS_URL || "redis://redis:6379" });
 producerClient.on("error",(err)=>{
    console.log("error in redis producerClient",err)
 })

@@ -4,7 +4,7 @@ import { siginSchema, SignUpSchema, signupSchema, createRoomSchema, JWT_SECRET, 
 import  cookieParser from "cookie-parser"
 import bodyPaser from "body-parser"
 import jwt from "jsonwebtoken";
-import prisma from "../../../packages/db/dist/index.js";
+import prisma, { Prisma } from "@repo/db";
 import cors from "cors";
 import { producerClient, connectClient } from "./routes/worker/redisClient.js";
 import "./routes/worker/worker.js";
@@ -13,7 +13,7 @@ const app:Express=express();
 
 
 app.use(cors({
-   origin:"http://localhost:3000",
+   origin: process.env.FRONTEND_URL || "http://localhost:3000",
    credentials:true
 }));
 
@@ -30,6 +30,8 @@ app.get("/",(req,res)=>{
    
    res.json({message:"request received"}).status(200);
 })
+
+type RoomData = { room: { name: string }, roomId: string }
 
 
 app.post("/signup",async(req,res)=>{
@@ -145,7 +147,7 @@ app.post("/createroom",authUser,async(req:Request,res:Response)=>{
       if(!userId){
          throw new Error("user id in present createdroom");
       }
-      const roomCreated=await prisma.$transaction(async(tx)=>{
+      const roomCreated=await prisma.$transaction(async(tx: Prisma.TransactionClient)=>{
          const room=await tx.room.create({
             data:{
                name:parsed.data?.roomName as string,
@@ -426,12 +428,12 @@ app.get("/getAllRooms",authUser,async(req,res)=>{
       const cachedRoomList=await producerClient.lRange(`roomList:${userId}`,0,-1);
 
       if(cachedRoomList.length>0){
-         const roomLists=cachedRoomList.map((item)=>JSON.parse(item));
+         const roomLists=cachedRoomList.map((item:string)=>JSON.parse(item));
          return res.status(200).json({ status: "success", message: "feched all the rooms list cached data", data: roomLists });
 
       }
 
-      const allRooms=await prisma.roomMember.findMany({
+      const allRooms:RoomData[]=await prisma.roomMember.findMany({
          where:{
             userId:userId
          },
@@ -445,16 +447,18 @@ app.get("/getAllRooms",authUser,async(req,res)=>{
          }
       })
 
+     
+
 
       const formatedData:{roomName:string,roomId:string}[] = [];
 
-      allRooms.forEach((item) => {
+      allRooms.forEach((item:RoomData) => {
 
          formatedData.push({ roomName: item.room.name, roomId: item.roomId });
       })
 
 
-      const setCachedRoomList=formatedData.map((item)=>JSON.stringify(item));
+      const setCachedRoomList=formatedData.map((item:{roomName:string,roomId:string})=>JSON.stringify(item));
 
 
 
@@ -490,12 +494,22 @@ app.get("/getRoomChats/:roomId", authUser, async (req: Request<{ roomId: string 
 
       if (cachedMessages.length>0){
 
-         const messages=cachedMessages.map(item=>JSON.parse(item));
+         const messages=cachedMessages.map((item:string)=>JSON.parse(item));
 
 
          return res.status(200).json({ status: "success", message: "all the cached data for this room", data: messages });
 
 
+      }
+
+      type ChatMessage={
+         id:number,
+         message:string,
+         createdAt:Date,
+         user:{
+            username:string,
+            id:string
+         }
       }
 
       const chatMessages=await prisma.room.findUnique({
@@ -532,12 +546,12 @@ app.get("/getRoomChats/:roomId", authUser, async (req: Request<{ roomId: string 
       // set cache here after getting the data;
 
 
-      chatMessages.chats.forEach((item) => {
+      chatMessages.chats.forEach((item:ChatMessage) => {
          formatedData.push({ userId: item.user.id, id: item.id.toString(), name: item.user.username, message: item.message, time: item.createdAt.toString() });
       })
 
       // stringfy all data
-      const redisChatData = formatedData.map(item => JSON.stringify(item));
+      const redisChatData = formatedData.map((item:{userId: string, id: string, name: string, message: string, time: string}) => JSON.stringify(item));
 
       if(redisChatData.length>=1){
          await producerClient.rPush(`roomChats:${roomId}`,redisChatData)
@@ -563,6 +577,5 @@ async function startServer(){
    console.log("error in connecting starting the server",error)
   }
 }
-
 
 startServer();

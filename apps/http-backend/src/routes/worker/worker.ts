@@ -2,11 +2,14 @@
 // if not stored in database then again store in queue;
 
 import { createClient } from "redis";
-import prisma from "../../../../../packages/db/dist/index.js";
+import prisma from "@repo/db";
+import dotenv from "dotenv";
+dotenv.config();
 
 import { producerClient } from "./redisClient.js";
 
-const client=createClient();
+
+const client=createClient({url:process.env.REDIS_URL || "redis://redis:6379"});
 client.on("error",(err)=>console.log("error in worker client"));
 
 
