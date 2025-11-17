@@ -1,7 +1,14 @@
 import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
-import {  JWT_SECRET } from "@repo/types";
+
 import jwt, { JwtPayload } from "jsonwebtoken"
+
+
+if (!process.env.JWT_SECRET){
+   const dotenv=await import("dotenv");
+   dotenv.config();
+}
+const JWT_SECRET=process.env.JWT_SECRET as string;
 
 export async function GET() {
    const cookieStore = await cookies();

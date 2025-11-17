@@ -1,6 +1,6 @@
 import express ,{ Express, json, Request, Response } from "express";
 import { authUser } from "./middleware/middle.js";
-import { siginSchema, SignUpSchema, signupSchema, createRoomSchema, JWT_SECRET, joinRoom, roomMessage } from "@repo/types";
+import { siginSchema, SignUpSchema, signupSchema, createRoomSchema, joinRoom, roomMessage } from "@repo/types";
 import  cookieParser from "cookie-parser"
 import bodyPaser from "body-parser"
 import jwt from "jsonwebtoken";
@@ -10,6 +10,14 @@ import { producerClient, connectClient } from "./routes/worker/redisClient.js";
 import "./routes/worker/worker.js";
 
 const app:Express=express();
+
+// Validate JWT_SECRET is set
+if (!process.env.JWT_SECRET) {
+  const dotenv = await import("dotenv");
+  dotenv.config();
+}
+
+const JWT_SECRET = process.env.JWT_SECRET;
 
 
 app.use(cors({
@@ -75,7 +83,7 @@ app.post("/signin",async(req,res)=>{
       const id=foundUser.id;
       const username=foundUser.username;
 
-      const token = jwt.sign({id,username}, JWT_SECRET);
+      const token = jwt.sign({id,username}, JWT_SECRET as string, { expiresIn: '7d' });
 
 
       return res.status(200).cookie("Authorization", token, {

@@ -3,13 +3,21 @@
 
 import { createClient } from "redis";
 import prisma from "@repo/db";
-import dotenv from "dotenv";
-dotenv.config();
+
+
+if (!process.env.REDIS_URL) {
+   const dotenv = await import("dotenv");
+   dotenv.config();
+}
+
+
 
 import { producerClient } from "./redisClient.js";
 
 
-const client=createClient({url:process.env.REDIS_URL || "redis://redis:6379"});
+const client = createClient({
+   url: process.env.REDIS_URL || "redis://localhost:6379"
+});
 client.on("error",(err)=>console.log("error in worker client"));
 
 

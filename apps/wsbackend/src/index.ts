@@ -1,8 +1,26 @@
 import { WebSocket, WebSocketServer } from "ws";
 import url from "url";
-
 import jwt, { JwtPayload } from "jsonwebtoken";
-import { JWT_SECRET } from "@repo/types";
+import path from "path";
+import { fileURLToPath } from "url";
+
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+
+if (!process.env.JWT_SECRET) {
+  const dotenv = await import("dotenv");
+  dotenv.config({ path: path.resolve(__dirname, "../../../.env") });
+}
+
+
+if (!process.env.JWT_SECRET) {
+  throw new Error("JWT_SECRET environment variable is required");
+}
+
+
+
 
 const wss = new WebSocketServer({ port: 8080 });
 
@@ -41,7 +59,7 @@ const authUser = (reqUrl: string): AuthUser => {
   if (queryParams.token) {
     const decode = jwt.verify(
       queryParams.token as string,
-      JWT_SECRET,
+      process.env.JWT_SECRET as string,
     ) as JwtPayload;
     console.log(decode, "decode in the websocket backend ");
     return {

@@ -17,9 +17,9 @@ const SignUp=()=>{
      try {
 
        const signUpResponse = await axios.post(
-					"http://localhost:3001/signup",
+					`${process.env.NEXT_PUBLIC_BACKEND_URL}/signup`,
 					{ username, email, password },
-               {withCredentials:true}
+					{ withCredentials: true }
 				);
 
 				console.log(signUpResponse, "signupResponse");

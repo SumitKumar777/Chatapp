@@ -47,8 +47,8 @@ function Dashboard() {
 
         if (data.token) {
           const connection = new WebSocket(
-            `ws://localhost:8080?token=${data.token}`,
-          );
+						`${process.env.NEXT_PUBLIC_WEBSOCKET_BACKEND_URL}?token=${data.token}`
+					);
           let hasOpened = false;
           connection.onopen = () => {
             hasOpened = true;

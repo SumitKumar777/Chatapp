@@ -35,4 +35,3 @@ export type SignUpSchema=z.infer<typeof signupSchema>;
 
 export type SignInSchema = z.infer<typeof siginSchema>;
 
-export const JWT_SECRET='this is screat';

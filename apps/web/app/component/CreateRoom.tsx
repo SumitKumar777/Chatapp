@@ -24,7 +24,7 @@ function CreateRoom() {
 
       console.log(`${process.env.NEXT_PUBLIC_BACKEND_URL}`, "backend");
       const createRoomResponse = await axios.post(
-        "http://localhost:3001/createroom",
+        `${process.env.NEXT_PUBLIC_BACKEND_URL}/createroom`,
         {
           roomName,
         },

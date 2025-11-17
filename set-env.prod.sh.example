@@ -1,0 +1,27 @@
+#!/bin/bash
+# Production Environment Variables
+# Copy this file to set-env.prod.sh and fill in real values
+# NEVER commit set-env.prod.sh to git!
+
+# === SECRETS (CHANGE THESE!) ===
+export JWT_SECRET="CHANGE_ME_USE_openssl_rand_base64_32"
+
+# === DATABASE ===
+export DATABASE_URL="postgresql://prod_user:prod_pass@prod-db.example.com:5432/chatapp"
+export POSTGRES_USER="prod_user"
+export POSTGRES_PASSWORD="CHANGE_ME"
+export POSTGRES_DB="chatapp"
+
+# === REDIS ===
+export REDIS_URL="redis://prod-redis.example.com:6379"
+
+# === FRONTEND ===
+export FRONTEND_URL="https://yourdomain.com"
+export NEXT_PUBLIC_BACKEND_URL="https://api.yourdomain.com"
+export NEXT_PUBLIC_WEBSOCKET_BACKEND_URL="wss://ws.yourdomain.com"
+
+# === ENVIRONMENT ===
+export NODE_ENV="production"
+
+echo " Production environment variables loaded!"
+echo " Run: docker-compose -f docker-compose.prod.yaml up -d"

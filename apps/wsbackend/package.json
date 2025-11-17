@@ -17,6 +17,7 @@
     "@repo/types": "workspace:*",
     "@repo/typescript-config": "workspace:*",
     "@types/ws": "^8.18.1",
+    "dotenv": "^17.2.2",
     "jsonwebtoken": "^9.0.2",
     "typescript": "^5.9.2",
     "url": "^0.11.4",

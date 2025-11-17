@@ -55,7 +55,7 @@ function SearchRoom() {
 
 				console.log(`${process.env.NEXT_PUBLIC_BACKEND_URL}`, "backend");
 				const joinRoomResponse = await axios.post(
-					"http://localhost:3001/joinroom",
+					`${process.env.NEXT_PUBLIC_BACKEND_URL}/joinroom`,
 					{
 						roomId,
 					},

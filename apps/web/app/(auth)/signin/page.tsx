@@ -14,13 +14,12 @@ const SignIn = () => {
 
 		try {
 			const signinResponse = await axios.post(
-				"http://localhost:3001/signin",
+				`${process.env.NEXT_PUBLIC_BACKEND_URL}/signin`,
 				{
 					email,
 					password,
 				},
 				{
-					
 					withCredentials: true,
 				}
 			);
