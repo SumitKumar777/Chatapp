@@ -1,5 +1,8 @@
 #!/bin/bash
 # Development Environment Variables
+
+
+
 # Source this file before running docker-compose: source ./set-env.sh
 
 
@@ -20,5 +23,5 @@ export NEXT_PUBLIC_BACKEND_URL="http://localhost:3001"
 export NEXT_PUBLIC_WEBSOCKET_BACKEND_URL="ws://localhost:8080"
 
 
-export NODE_ENV="development"
+export NODE_ENV="production"
 
