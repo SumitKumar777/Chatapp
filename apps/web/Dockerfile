@@ -1,4 +1,4 @@
-FROM node:24-alpine
+FROM node:22-alpine
 
 
 ARG NEXT_PUBLIC_BACKEND_URL=http://localhost:3001

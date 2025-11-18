@@ -1,4 +1,4 @@
-FROM node:24-alpine
+FROM node:22-alpine
 
 WORKDIR /app
 
@@ -31,7 +31,7 @@ COPY apps/http-backend ./apps/http-backend
 
 
 WORKDIR /app/packages/db
-RUN npx prisma generate && npx prisma migrate deploy
+RUN npx prisma generate 
 
 
 RUN pnpm --filter @repo/db build
@@ -43,4 +43,5 @@ RUN pnpm build
 
 EXPOSE 3001
 
-CMD [ "pnpm", "start" ]
+CMD ["sh", "-c", "cd /app/packages/db && npx prisma migrate deploy && cd /app/apps/http-backend && pnpm start"]
+
