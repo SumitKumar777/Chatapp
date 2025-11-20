@@ -34,7 +34,7 @@ app.use(cookieParser());
 const PORT = 3001;
 
 
-app.get("/",(req,res)=>{
+app.get("/api/",(req,res)=>{
    
    res.json({message:"request received"}).status(200);
 })
@@ -42,7 +42,7 @@ app.get("/",(req,res)=>{
 type RoomData = { room: { name: string }, roomId: string }
 
 
-app.post("/signup",async(req,res)=>{
+app.post("/api/signup",async(req,res)=>{
  try {
     const body = req.body;
     const parsed = signupSchema.safeParse(body);
@@ -65,7 +65,7 @@ app.post("/signup",async(req,res)=>{
  }
 })
 
-app.post("/signin",async(req,res)=>{
+app.post("/api/signin",async(req,res)=>{
    try {
       const body = req.body;
            const parsed = siginSchema.safeParse(body);
@@ -99,7 +99,7 @@ app.post("/signin",async(req,res)=>{
 });
 
 
-app.get("/getUserDetail",authUser,async (req:Request,res:Response)=>{
+app.get("/api/getUserDetail",authUser,async (req:Request,res:Response)=>{
 
    const userId=req.userId;
 
@@ -143,7 +143,7 @@ app.get("/getUserDetail",authUser,async (req:Request,res:Response)=>{
 
 
 
-app.post("/createroom",authUser,async(req:Request,res:Response)=>{
+app.post("/api/createroom",authUser,async(req:Request,res:Response)=>{
    try {
       const body = req.body;
       const parsed = createRoomSchema.safeParse(body);
@@ -190,7 +190,7 @@ interface RoomParams{
    roomId:string;
 }
 
-app.get("/room/detail/:roomId",authUser,async(req:Request<RoomParams>,res)=>{
+app.get("/api/room/detail/:roomId",authUser,async(req:Request<RoomParams>,res)=>{
    try {
       const roomId:string=req.params.roomId;
       if(!roomId){
@@ -224,7 +224,7 @@ app.get("/room/detail/:roomId",authUser,async(req:Request<RoomParams>,res)=>{
 
 // invalidate Roomlist cache if the user has joined the room
 
-app.post("/joinroom",authUser,async(req:Request<RoomParams>,res:Response)=>{
+app.post("/api/joinroom",authUser,async(req:Request<RoomParams>,res:Response)=>{
    try {
       const body=req.body;
       const parsed=joinRoom.safeParse(body);
@@ -281,7 +281,7 @@ app.post("/joinroom",authUser,async(req:Request<RoomParams>,res:Response)=>{
 
 // getRooms all the rooms where the user is not joined/created / not part of with and search based on name 
 
-app.get("/searchRoom/:searchRoomName",authUser,async (req:Request,res:Response)=>{
+app.get("/api/searchRoom/:searchRoomName",authUser,async (req:Request,res:Response)=>{
 
 
    const userId=req.userId;
@@ -340,7 +340,7 @@ app.get("/searchRoom/:searchRoomName",authUser,async (req:Request,res:Response)=
 // when the user has left the room the message should remain cached of that roomId for that userId because it should never change 
 
 app.delete(
-   "/leaveroom",
+   "/api/leaveroom",
    authUser,
    async (req: Request, res: Response) => {
       try {
@@ -389,7 +389,7 @@ app.delete(
 
 // invalidate Roomchats for that roomid in which message is send 
 
-app.post("/message",authUser,async(req:Request,res:Response)=>{
+app.post("/api/message",authUser,async(req:Request,res:Response)=>{
    try {
       const data = req.body;
       const parsed=roomMessage.safeParse(data);
@@ -427,7 +427,7 @@ app.post("/message",authUser,async(req:Request,res:Response)=>{
 
 // cache all the rooms for that userId if no room is created or joined for that userID if joined or created invalidate it 
 
-app.get("/getAllRooms",authUser,async(req,res)=>{
+app.get("/api/getAllRooms",authUser,async(req,res)=>{
 
    try {
 
@@ -490,7 +490,7 @@ app.get("/getAllRooms",authUser,async(req,res)=>{
 
 
 
-app.get("/getRoomChats/:roomId", authUser, async (req: Request<{ roomId: string }>, res) => {
+app.get("/api/getRoomChats/:roomId", authUser, async (req: Request<{ roomId: string }>, res) => {
 
    try {
       const roomId = req.params.roomId;

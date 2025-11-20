@@ -53,3 +53,5 @@ jobs:
           tags: |
             sumit487/chatapp-frontend:${{ github.sha }}
             sumit487/chatapp-frontend:latest
+      
+      
