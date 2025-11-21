@@ -3,6 +3,8 @@ import axios from "axios";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 
+
+
 const SignIn = () => {
 	const router = useRouter();
 
@@ -14,7 +16,9 @@ const SignIn = () => {
 
 		try {
 			const signinResponse = await axios.post(
-				`${process.env.NEXT_PUBLIC_BACKEND_URL}/signin`,
+				process.env.NODE_ENV === "development"
+					? `${process.env.NEXT_PUBLIC_BACKEND_URL}/signin`
+					: "/api/signin",
 				{
 					email,
 					password,

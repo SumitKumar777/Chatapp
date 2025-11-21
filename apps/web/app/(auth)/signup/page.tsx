@@ -17,7 +17,9 @@ const SignUp=()=>{
      try {
 
        const signUpResponse = await axios.post(
-					`${process.env.NEXT_PUBLIC_BACKEND_URL}/signup`,
+				process.env.NODE_ENV === "development"
+					? `${process.env.NEXT_PUBLIC_BACKEND_URL}/signup`
+					: "/api/signup",
 					{ username, email, password },
 					{ withCredentials: true }
 				);

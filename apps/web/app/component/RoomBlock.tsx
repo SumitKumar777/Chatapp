@@ -14,6 +14,10 @@ function RoomBlock({ roomName, roomId }: Rooms) {
   const setCurrentRoomName = useSocket((state) => state.setCurrentRoomName);
   const setIsSidebarOpen = userUtils((state) => state.setIsSidebarOpen);
 
+
+
+
+
   // when the user click on delete room first it should make call to the backend and then to webSocket backend and then remove from the dom
 
   const leaveRoom = async (): Promise<"deleted" | "not_Deleted"> => {
@@ -61,7 +65,9 @@ function RoomBlock({ roomName, roomId }: Rooms) {
         throw new Error("not removed from the websocket backend");
       }
       const backendRemove = await axios.delete(
-        `${process.env.NEXT_PUBLIC_BACKEND_URL}/leaveroom`,
+        process.env.NODE_ENV === "development"
+          ? `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/leaveroom`
+          : "/api/leaveroom",
         { data: { roomId }, withCredentials: true },
       );
 

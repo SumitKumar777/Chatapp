@@ -103,7 +103,9 @@ function Dashboard() {
           };
 
           const roomList = await axios.get<RommListResponse>(
-            `${process.env.NEXT_PUBLIC_BACKEND_URL}/getAllRooms`,
+            process.env.NODE_ENV === "development"
+              ? `${process.env.NEXT_PUBLIC_BACKEND_URL}/getAllRooms`
+              : "/api/getAllRooms",
             {
               withCredentials: true,
             },

@@ -29,7 +29,9 @@ function ShowMessage() {
   useEffect(() => {
     const fetchMessage = async (roomId: string) => {
       const messages = await axios.get(
-        `${process.env.NEXT_PUBLIC_BACKEND_URL}/getRoomChats/${roomId}`,
+        process.env.NODE_ENV === "development"
+          ? `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/getRoomChats/${roomId}`
+          : `/api/getRoomChats/${roomId}`,
         {
           withCredentials: true,
         },
