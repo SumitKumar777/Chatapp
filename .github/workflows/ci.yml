@@ -53,5 +53,7 @@ jobs:
           tags: |
             sumit487/chatapp-frontend:${{ github.sha }}
             sumit487/chatapp-frontend:latest
-      
-      
+          build-args: |
+            NEXT_PUBLIC_BACKEND_URL=${{ secrets.NEXT_PUBLIC_BACKEND_URL }}
+            NEXT_PUBLIC_WEBSOCKET_BACKEND_URL=${{ secrets.NEXT_PUBLIC_WEBSOCKET_BACKEND_URL }}
+

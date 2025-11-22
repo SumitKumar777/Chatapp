@@ -40,14 +40,14 @@ function Dashboard() {
   useEffect(() => {
     const getTokenAndConnect = async () => {
       try {
-        const res = await fetch("/api/token");
+        const res = await fetch("/internal/token");
         const data = await res.json();
 
         console.log(data, "data of the user");
 
         if (data.token) {
           const connection = new WebSocket(
-						`${process.env.NEXT_PUBLIC_WEBSOCKET_BACKEND_URL}?token=${data.token}`
+						`${process.env.NEXT_PUBLIC_WEBSOCKET_BACKEND_URL}/ws?token=${data.token}`
 					);
           let hasOpened = false;
           connection.onopen = () => {
@@ -102,16 +102,14 @@ function Dashboard() {
             }
           };
 
-          const roomList = await axios.get<RommListResponse>(
-            process.env.NODE_ENV === "development"
-              ? `${process.env.NEXT_PUBLIC_BACKEND_URL}/getAllRooms`
-              : "/api/getAllRooms",
-            {
-              withCredentials: true,
-            },
-          );
-
-          if (roomList.data.status !== "success") {
+        const roomList = await axios.get<RommListResponse>(
+          process.env.NODE_ENV === "development"
+            ? `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/getAllRooms`
+            : "/api/getAllRooms",
+          {
+            withCredentials: true,
+          },
+        );          if (roomList.data.status !== "success") {
             throw new Error("fetching room failed");
           }
 
