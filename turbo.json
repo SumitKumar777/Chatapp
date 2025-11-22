@@ -2,13 +2,13 @@
   "$schema": "https://turborepo.com/schema.json",
   "ui": "tui",
   "globalDependencies": [".env"],
-  "globalEnv": ["JWT_SECRET"],
+  "globalEnv": ["NODE_ENV"],
   "tasks": {
     "build": {
       "dependsOn": ["^build"],
       "inputs": ["$TURBO_DEFAULT$", ".env*"],
       "outputs": [".next/**", "!.next/cache/**","dist/**"],
-      "env": ["JWT_SECRET"]
+      "env": ["NODE_ENV"]
     },
     "lint": {
       "dependsOn": ["^lint"]

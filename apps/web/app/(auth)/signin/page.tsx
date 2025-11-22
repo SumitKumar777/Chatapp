@@ -17,7 +17,7 @@ const SignIn = () => {
 		try {
 			const signinResponse = await axios.post(
 				process.env.NODE_ENV === "development"
-					? `${process.env.NEXT_PUBLIC_BACKEND_URL}/signin`
+					? `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/signin`
 					: "/api/signin",
 				{
 					email,
