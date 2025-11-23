@@ -94,7 +94,7 @@ const SignUp=()=>{
       >
         Sign Up
       </button>
-		<p className="text-gray-400 flex justify-center gap-2">Already have a Account <Link href={"/signin"} className="text-blue-500 underline  ">Sing In</Link></p>
+		<p className="text-gray-400 flex justify-center gap-2">Already have a Account <Link href={"/signin"} className="text-blue-500 underline  ">SignIn</Link></p>
     </form>
   </div>
 );
