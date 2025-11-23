@@ -43,7 +43,18 @@ function Dashboard() {
         const res = await fetch("/internal/token");
         const data = await res.json();
 
-        console.log(data, "data of the user");
+          const roomList = await axios.get<RommListResponse>(
+						process.env.NODE_ENV === "development"
+							? `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/getAllRooms`
+							: "/api/getAllRooms",
+						{
+							withCredentials: true,
+						}
+					); 
+        if (roomList.data.status !== "success") {
+          throw new Error("fetching room failed");
+        }
+        
 
         if (data.token) {
           const connection = new WebSocket(
@@ -52,13 +63,39 @@ function Dashboard() {
           let hasOpened = false;
           connection.onopen = () => {
             hasOpened = true;
+
+             if (connection && data.id) {
+								if (roomList.data.data) {
+									roomList.data.data.forEach((item) => {
+										connection.send(
+											JSON.stringify({
+												type: "join_room",
+												roomId: item.roomId,
+											})
+										);
+									});
+									console.log("connection is made with all the roomlist");
+								} else {
+									console.log(
+										"room list is not present so connection are not made to websocket ",
+										roomList.data.data
+									);
+								}
+							}
             connection.send(JSON.stringify("hi there from frontend"));
           };
           connection.onmessage = (event) => {
+            const data = event.data;
+
+            let msg;
+							try {
+								msg = JSON.parse(data);
+							} catch {
+								console.log("Received non-JSON message:", data);
+								return;
+							}
             try {
-              console.log(event.data, "event data ");
-              const parseddData = JSON.parse(event.data);
-              console.log(parseddData, "parsedData");
+              const parseddData = JSON.parse(msg);
 
               const modifiedMessage = {
                 userId: parseddData.userId,
@@ -68,17 +105,10 @@ function Dashboard() {
                 time: parseddData.time,
               };
 
-              if (parseddData.roomId && parseddData) {
+
                 addMessage(parseddData.roomId, modifiedMessage);
-              } else {
-                console.log(
-                  "error in adding the message parsed data is   ",
-                  parseddData,
-                );
-              }
-            } catch (error: unknown) {
-              if (error instanceof Error) {
-                console.log(event.data, "webSocket message in string");
+           
+            } catch (error: unknown) {              if (error instanceof Error) {
                 console.log(error.message, "in client on message");
               } else {
                 console.log("unexpected error in dashboard onmessage", error);
@@ -102,35 +132,6 @@ function Dashboard() {
             }
           };
 
-        const roomList = await axios.get<RommListResponse>(
-          process.env.NODE_ENV === "development"
-            ? `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/getAllRooms`
-            : "/api/getAllRooms",
-          {
-            withCredentials: true,
-          },
-        );          if (roomList.data.status !== "success") {
-            throw new Error("fetching room failed");
-          }
-
-          if (connection && data.id) {
-            if (roomList.data.data) {
-              roomList.data.data.forEach((item) => {
-                connection.send(
-                  JSON.stringify({
-                    type: "join_room",
-                    roomId: item.roomId,
-                  }),
-                );
-              });
-              console.log("connection is made with all the roomlist");
-            } else {
-              console.log(
-                "room list is not present so connection are not made to websocket ",
-                roomList.data.data,
-              );
-            }
-          }
 
           setSocket(connection);
 
@@ -148,8 +149,16 @@ function Dashboard() {
             }
           }
         }
-      } catch (error) {
-        console.log("error in useeffect dashboard", error);
+      } catch (error:unknown) {
+        if (error instanceof Error) {
+          console.log(error.message, "error instance of error in dashboard useeffect");
+          return;
+
+        }
+        console.log("unexpected error in useeffect dashboard", error);
+        return;
+
+
       }
     };
     console.log("outside the useeffect of socket", socket);

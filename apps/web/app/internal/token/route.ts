@@ -9,6 +9,7 @@ if (!process.env.JWT_SECRET){
    dotenv.config();
 }
 const JWT_SECRET=process.env.JWT_SECRET as string;
+console.log("JWT_SECRET in internal token route", JWT_SECRET);
 
 export async function GET() {
    const cookieStore = await cookies();
@@ -18,6 +19,7 @@ export async function GET() {
    if (token) {
       try {
          id = jwt.verify(token, JWT_SECRET) as JwtPayload;
+         console.log("Verified token id: in internal", id);
       } catch (err) {
          console.error("Invalid token:", err);
          id = null;
