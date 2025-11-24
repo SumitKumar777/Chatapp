@@ -89,7 +89,7 @@ app.post("/api/signin",async(req,res)=>{
       return res.status(200).cookie("Authorization", token, {
          maxAge: 7*24*60*60*1000,
          httpOnly: true,
-         secure: false,
+         secure: process.env.NODE_ENV === "production",
          sameSite: "lax", 
       }).json({ message: "request received",foundUser });
 
@@ -261,7 +261,7 @@ app.post("/api/joinroom",authUser,async(req:Request<RoomParams>,res:Response)=>{
                }
             }
          })
-         console.log(joinUser,"joinuser in joinroom")
+
          await producerClient.del(`roomList:${userId}`)
          return res.status(200).json({status:"succes",message:"user not added to room",data:joinUser})
       }
@@ -347,7 +347,6 @@ app.delete(
          const body=req.body;
          const parsed=joinRoom.safeParse(body);
          if(!parsed.success){
-            console.log("body",body,"parsedDate",parsed);
             throw new Error("Invalid leave room request body");
          }
 

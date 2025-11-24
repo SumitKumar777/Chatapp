@@ -7,8 +7,7 @@ import RoomHeadingBlock from "./RoomHeadingBlock";
 const RoomHeading=()=>{
   const currentRoomId = useSocket((state) => state.currentRoomId);
 	const currentRoomName=useSocket((state)=>state.currentRoomName);
-	console.log("roomname in the room Heading ",currentRoomName);
-	console.log("currentId in the room Heading ", currentRoomId);
+
 
    return (
 			<>
