@@ -54,14 +54,14 @@ type UserInfo = {
 const authUser = (reqUrl: string): AuthUser => {
   const parsedUrl = url.parse(reqUrl, true);
   const queryParams = parsedUrl.query;
-  console.log(queryParams, "token in websocket backend");
+
 
   if (queryParams.token) {
     const decode = jwt.verify(
       queryParams.token as string,
       process.env.JWT_SECRET as string,
     ) as JwtPayload;
-    console.log(decode, "decode in the websocket backend ");
+
     return {
       success: true,
       userId: decode.id,
@@ -88,6 +88,7 @@ const addUsertoRoom = (roomId: string, userSocket: WebSocket) => {
   const user = allUser.get(userSocket);
   if (!user) {
     console.log("user not found in adding user");
+
     return;
   }
   // check for the first user
@@ -133,7 +134,7 @@ const removeUserfromRoom = (roomId: string, userSocket: WebSocket) => {
   const users = mainState.get(roomId);
 
   const updatedUser = users?.filter((u) => u.userId !== user.userId);
-  console.log(user.userId, "userId in removeuserfromroom");
+
   updatedUser?.forEach((item) =>
     console.log("all the users connected after removing room", item.userId),
   );
@@ -158,13 +159,6 @@ const brodcastMessage = (
     return;
   }
 
-  console.log(
-    "roomId in broadcast",
-    roomId,
-    "message in",
-    message,
-    "broadcast",
-  );
 
   const user = allUser.get(userSocket);
 
@@ -194,7 +188,7 @@ const brodcastMessage = (
 
   const userPresent = connectedUser.some((item) => item.userId === user.userId);
 
-  console.log("user present in broadcast", userPresent);
+
 
   if (!userPresent) {
     console.log("user is not present", userPresent);
@@ -248,7 +242,7 @@ wss.on("connection", (ws, request) => {
         addUsertoRoom(roomId, ws);
       }
       if (type === "leave_room") {
-        console.log("start of leave room ");
+
         removeUserfromRoom(roomId, ws);
       }
       if (type === "message") {

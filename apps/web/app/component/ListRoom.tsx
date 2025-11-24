@@ -4,11 +4,10 @@ import RoomBlock from "./RoomBlock";
 
 function ListRooms({classes}:{classes:string}) {
    const room=useSocket((state)=>state.rooms);
-   console.log(room,"listroom");
 
    return (
 			<>
-				<div className={`${classes}  scroll-smooth pt-4 `}>
+				<div className={`${classes} h-full scroll-smooth py-4 px-2`}>
 					{room.length !== 0
 						? room.map((item) => (
 								<RoomBlock
@@ -19,6 +18,7 @@ function ListRooms({classes}:{classes:string}) {
 							))
 						: "No Room Present connect to room or join room to start chatting "}
 				</div>
+
 			</>
 		);
 }

@@ -36,7 +36,6 @@ function ShowMessage() {
           withCredentials: true,
         },
       );
-      console.log("messages in the setting the messages", messages.data.data);
       setMessage(currentRoomId!, messages.data.data);
     };
 

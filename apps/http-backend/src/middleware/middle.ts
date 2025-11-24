@@ -7,8 +7,6 @@ if(!process.env.JWT_SECRET){
 }     
 
 
-
-
 declare global {
   namespace Express {
     interface Request {
@@ -22,15 +20,15 @@ declare global {
 export function authUser(req:Request<{},{},{}>,  res:Response, next: NextFunction) {
    try {
       const token = req.cookies.Authorization;
-      console.log("auth token",token)
+      if (!token) {
+         throw new Error("unauthenticated user no token");
+      }
 
       const decode=jwt.verify(token,process.env.JWT_SECRET || "this is secret") as JwtPayload;
-      console.log(decode,"decode in authuser");
+
       if(!decode.id){
          throw new Error("unauthenticated user");
       }
-
-      console.log(decode,"decode in the authuser middleware ");
 
       req.userId=decode.id;
       req.username=decode.username;

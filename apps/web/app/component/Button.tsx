@@ -4,7 +4,7 @@ import React from "react";
 interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
    
    classname?:string,
-   type:"button"| "submit"
+   type?:"button"| "submit"
 
 }
 
