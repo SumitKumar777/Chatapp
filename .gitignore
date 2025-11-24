@@ -44,4 +44,6 @@ yarn-error.log*
 *.pem
 
 
-.vscode/
+.vscode
+.vscode/*
+set-env.sh
