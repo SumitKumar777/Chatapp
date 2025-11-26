@@ -39,8 +39,8 @@ function SendMessage( {className}:{className:string}) {
 
 				const sendMessage = await axios.post(
 					process.env.NODE_ENV === "development"
-						? `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/message`
-						: "/api/message",
+						? `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/chat/message`
+						: "/api/chat/message",
 					data,
 					{ withCredentials: true }
 				);

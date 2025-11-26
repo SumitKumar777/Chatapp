@@ -1,9 +1,9 @@
 {
    "extends":"@repo/typescript-config/base.json",
    "compilerOptions": {
-			"forceConsistentCasingInFileNames": true,
-			"rootDir": "./src",
-			"outDir": "./dist",
+            "forceConsistentCasingInFileNames": true,
+            "rootDir": "./src",
+            "outDir": "./dist",
            "types": ["node", "express"]
 		},
         "include": ["src", "types"] 

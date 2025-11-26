@@ -18,13 +18,13 @@ const SignUp=()=>{
 
        const signUpResponse = await axios.post(
 				process.env.NODE_ENV === "development"
-					? `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/signup`
-					: "/api/signup",
+					? `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/auth/signup`
+					: "/api/auth/signup",
 					{ username, email, password },
 					{ withCredentials: true }
 				);
 
-				console.log(signUpResponse, "signupResponse");
+
             if(signUpResponse){
                router.push("/signin")
             }

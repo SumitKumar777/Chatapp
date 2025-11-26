@@ -30,8 +30,8 @@ function ShowMessage() {
     const fetchMessage = async (roomId: string) => {
       const messages = await axios.get(
         process.env.NODE_ENV === "development"
-          ? `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/getRoomChats/${roomId}`
-          : `/api/getRoomChats/${roomId}`,
+          ? `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/chat/getRoomChats/${roomId}`
+          : `/api/chat/getRoomChats/${roomId}`,
         {
           withCredentials: true,
         },

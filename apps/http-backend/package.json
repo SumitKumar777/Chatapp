@@ -1,38 +1,45 @@
 {
-	"name": "http-backend",
-	"version": "1.0.0",
-	"description": "",
-	"main": "index.js",
-	"scripts": {
-		"test": "echo \"Error: no test specified\" && exit 1",
-		"build": "tsc -b  ",
-		"start": "pnpm run build && node ./dist/index.js",
-		"dev": "pnpm run build && pnpm run start"
-	},
-	"keywords": [],
-	"author": "",
-	"license": "ISC",
-	"type": "module",
-	"dependencies": {
-		"@repo/db": "workspace:*",
-		"@repo/types": "workspace:*",
-		"@repo/typescript-config": "workspace:*",
-		"@types/express": "^5.0.3",
-		"body-parser": "^2.2.0",
-		"cookie-parser": "^1.4.7",
-		"cors": "^2.8.5",
-		"dotenv": "^17.2.2",
-		"express": "^4.21.2",
-		"jsonwebtoken": "^9.0.2",
-		"nodemon": "^3.1.10",
-		"redis": "^5.8.2"
-	},
-	"devDependencies": {
-		"@types/body-parser": "^1.19.6",
-		"@types/cookie-parser": "^1.4.9",
-		"@types/cors": "^2.8.19",
-		"@types/jsonwebtoken": "^9.0.10",
-		"@types/node": "^22.15.3",
-		"ts-node": "^10.9.2"
-	}
+  "name": "http-backend",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "cross-env NODE_OPTIONS=--experimental-vm-modules jest",
+    "build": "tsc -b  ",
+    "start": "pnpm run build && node ./dist/startServer.js",
+    "dev": "pnpm run build && pnpm run start"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "module",
+  "dependencies": {
+    "@repo/db": "workspace:*",
+    "@repo/types": "workspace:*",
+    "@repo/typescript-config": "workspace:*",
+    "@types/express": "^5.0.3",
+    "body-parser": "^2.2.0",
+    "cookie-parser": "^1.4.7",
+    "cors": "^2.8.5",
+    "dotenv": "^17.2.2",
+    "express": "^4.21.2",
+    "jsonwebtoken": "^9.0.2",
+    "nodemon": "^3.1.10",
+    "redis": "^5.8.2"
+  },
+  "devDependencies": {
+    "@jest/globals": "^29.7.0",
+    "@types/body-parser": "^1.19.6",
+    "@types/cookie-parser": "^1.4.9",
+    "@types/cors": "^2.8.19",
+    "@types/jest": "^29.5.12",
+    "@types/jsonwebtoken": "^9.0.10",
+    "@types/node": "^22.15.3",
+    "@types/supertest": "^6.0.3",
+    "cross-env": "^7.0.3",
+    "jest": "^29.7.0",
+    "supertest": "^7.1.4",
+    "ts-jest": "^29.4.5",
+    "ts-node": "^10.9.2"
+  }
 }

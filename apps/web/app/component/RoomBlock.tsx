@@ -23,7 +23,7 @@ function RoomBlock({ roomName, roomId }: Rooms) {
   const leaveRoom = async (): Promise<"deleted" | "not_Deleted"> => {
     return new Promise((resolve, reject) => {
       try {
-        console.log("beginning");
+
         const foundUser = room.some((item) => item.roomId === roomId);
 
         // true when roomId is found so user not left the room
@@ -32,7 +32,7 @@ function RoomBlock({ roomName, roomId }: Rooms) {
         if (!foundUser) {
           return resolve("deleted");
         }
-        console.log("first");
+
 
         const socketData = {
           type: "leave_room",
@@ -64,18 +64,14 @@ function RoomBlock({ roomName, roomId }: Rooms) {
       if (connection === "not_Deleted") {
         throw new Error("not removed from the websocket backend");
       }
-      const backendRemove = await axios.delete(
+       await axios.delete(
         process.env.NODE_ENV === "development"
-          ? `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/leaveroom`
-          : "/api/leaveroom",
+          ? `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/room/leaveroom`
+          : "/api/room/leaveroom",
         { data: { roomId }, withCredentials: true },
       );
 
-      if (backendRemove) {
-        console.log(backendRemove, "backend removed the user from the room");
-      } else {
-        throw new Error("backend refused");
-      }
+  
 
       // remove from the room state
       deleteRoom(roomId);

@@ -17,8 +17,8 @@ const SignIn = () => {
 		try {
 			const signinResponse = await axios.post(
 				process.env.NODE_ENV === "development"
-					? `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/signin`
-					: "/api/signin",
+					? `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/auth/signin`
+					: "/api/auth/signin",
 				{
 					email,
 					password,
@@ -28,7 +28,7 @@ const SignIn = () => {
 				}
 			);
 
-			console.log(signinResponse, "signinResponse");
+
          if(signinResponse.data){
             router.push("/dashboard");
          }

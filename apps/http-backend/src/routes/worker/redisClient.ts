@@ -1,11 +1,8 @@
 
 import { createClient ,RedisClientType } from "redis";
 
+const PORT = 3001;
 
-if (!process.env.REDIS_URL) {
-   const dotenv = await import("dotenv");
-   dotenv.config();
-}
 
 const producerClient: RedisClientType = createClient({
    url: process.env.REDIS_URL || "redis://localhost:6379"

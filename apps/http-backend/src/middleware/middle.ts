@@ -1,11 +1,6 @@
 import { Request, Response, NextFunction } from "express";
 import jwt, { JwtPayload } from "jsonwebtoken";
 
-if(!process.env.JWT_SECRET){
-   const dotenv=await import("dotenv");
-   dotenv.config();
-}     
-
 
 declare global {
   namespace Express {

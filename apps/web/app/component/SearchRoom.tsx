@@ -28,8 +28,8 @@ function SearchRoom() {
       }
 
       const fetchRoom=await axios.get(process.env.NODE_ENV === "development"
-            ? `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/searchRoom/${searchParam}`
-            : `/api/searchRoom/${searchParam}`,
+            ? `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/room/searchRoom/${searchParam}`
+            : `/api/room/searchRoom/${searchParam}`,
          {withCredentials:true}
       );
       setRoomDetail(fetchRoom.data.data);
@@ -58,8 +58,8 @@ function SearchRoom() {
 				console.log(`${process.env.NEXT_PUBLIC_BACKEND_URL}`, "backend");
 				const joinRoomResponse = await axios.post(
 			 			process.env.NODE_ENV === "development"
-					? `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/joinroom`
-					: "/api/joinroom",
+					? `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/room/joinroom`
+					: "/api/room/joinroom",
 					{
 						roomId,
 					},

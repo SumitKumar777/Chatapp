@@ -5,10 +5,6 @@ import { createClient } from "redis";
 import prisma from "@repo/db";
 
 
-if (!process.env.REDIS_URL) {
-   const dotenv = await import("dotenv");
-   dotenv.config();
-}
 
 
 
@@ -63,4 +59,5 @@ const startWorker=async ()=>{
 
 }
 
-startWorker()
+
+export { startWorker };
