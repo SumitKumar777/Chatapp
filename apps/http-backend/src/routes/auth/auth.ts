@@ -3,31 +3,48 @@ import express, { Router } from "express";
 import jwt from "jsonwebtoken";
 import prisma from "@repo/db";
 import { siginSchema, SignUpSchema, signupSchema } from "@repo/types";
+import bcrypt from "bcrypt";
 
 
 export const authRouter:Router=express.Router();
 
 
 const JWT_SECRET = process.env.JWT_SECRET;
-console.log(JWT_SECRET, "jwt secret in auth route");
+
+
+const hashPassword=(password:string):Promise<string>=>{
+
+   return bcrypt.hash(password,10);
+}
+
+const comparePassword=(password:string,hash:string):Promise<boolean>=>{
+   return bcrypt.compare(password,hash);
+}
+
 
 
 authRouter.post("/signup", async (req, res) => {
    try {
       const body = req.body;
+
       const parsed = signupSchema.safeParse(body);
       if (!parsed.success) {
-         throw Error("parsing failed");
+         throw Error("Invalid Inputs ");
       }
       const { username, email, password }: SignUpSchema = parsed.data;
-      const createdUser = await prisma.user.create({
+
+      const hashedPassword=await hashPassword(password);
+
+
+       await prisma.user.create({
          data: {
             username,
             email,
-            password
+            password:hashedPassword
          }
-      })
-      res.status(200).json({ message: "user Created", createdUser });
+      });
+      
+      res.status(201).json({ message: "user Created" });
 
    } catch (error: any) {
       console.log(error, "error in the signup");
@@ -50,6 +67,11 @@ authRouter.post("/signin", async (req, res) => {
       if (!foundUser) {
          throw new Error("user not found");
       }
+
+      if( !await comparePassword(parsed.data.password,foundUser.password)){
+         throw new Error("Password is incorrect");
+      }
+
       const id = foundUser.id;
       const username = foundUser.username;
 
