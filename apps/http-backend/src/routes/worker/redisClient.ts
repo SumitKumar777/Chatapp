@@ -13,7 +13,6 @@ async function connectClient(){
       await producerClient.connect();
       console.log("client connected");
    }
-
 }
 
 export {producerClient,connectClient};

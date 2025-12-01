@@ -35,7 +35,7 @@ model Room {
   createdAt   DateTime @default(now())
 
   
-  createdBy   User   @relation("CreatedRooms", fields: [createdById], references: [id])
+  createdBy   User   @relation("CreatedRooms", fields: [createdById], references: [id],onDelete: Cascade)
   members     RoomMember[]
   chats       Chat[]
 }
@@ -50,7 +50,7 @@ model RoomMember {
 
   room      Room @relation(fields: [roomId], references: [id])
   user      User @relation(fields: [userId], references: [id])
-   @@unique([roomId, userId])
+  @@unique([roomId, userId])
 }
 
 model Chat {

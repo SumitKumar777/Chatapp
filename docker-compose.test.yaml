@@ -1,0 +1,22 @@
+services:
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    networks:
+      - chatapp-network
+
+  postgres:
+    image: postgres:15-alpine
+    environment:
+      POSTGRES_USER: ${POSTGRES_TEST_USER:-user}
+      POSTGRES_PASSWORD: ${POSTGRES_TEST_PASSWORD:-pass}
+      POSTGRES_DB: ${POSTGRES_TEST_DB:-db}
+    ports:
+      - "5432:5432"
+    networks:
+      - chatapp-network
+
+networks:
+  chatapp-network:
+    driver: bridge

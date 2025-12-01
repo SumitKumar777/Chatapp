@@ -3,6 +3,7 @@ import express,{ Request, Response } from "express";
 import { authUser } from "../../middleware/middle.js";
 import prisma from "@repo/db";
 import { producerClient } from "../worker/redisClient.js";
+import { AnyARecord } from "node:dns";
 
 export const userRouter:express.Router=express.Router();
    
@@ -47,3 +48,25 @@ userRouter.get("/getUserDetail",authUser,async (req:Request,res:Response)=>{
    }
 
 })
+
+
+userRouter.delete("/deleteuser",authUser,async (req,res)=>{
+
+   try {
+      const userId = req.userId;
+
+
+      const deleteUser = await prisma.user.delete({
+         where: {
+            id: userId
+         }
+      })
+
+      return res.status(204).json({message:"user deleted successfully"})
+
+   } catch (error:any) {
+      return res.status(500).json({message:"failed to delete user",error:error.message})
+   }
+
+})
+

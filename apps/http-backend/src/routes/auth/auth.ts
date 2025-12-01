@@ -4,6 +4,7 @@ import jwt from "jsonwebtoken";
 import prisma from "@repo/db";
 import { siginSchema, SignUpSchema, signupSchema } from "@repo/types";
 import bcrypt from "bcrypt";
+import { error } from "console";
 
 
 export const authRouter:Router=express.Router();
@@ -29,7 +30,7 @@ authRouter.post("/signup", async (req, res) => {
 
       const parsed = signupSchema.safeParse(body);
       if (!parsed.success) {
-         throw Error("Invalid Inputs ");
+         return res.status(400).json({ message: "invalid request body", error: parsed.error?.message })
       }
       const { username, email, password }: SignUpSchema = parsed.data;
 
@@ -48,7 +49,7 @@ authRouter.post("/signup", async (req, res) => {
 
    } catch (error: any) {
       console.log(error, "error in the signup");
-      res.status(400).json({ message: "request received", error: error.message });
+      res.status(500).json({ message: "unexcepted error in signup", error: error.message });
    }
 })
 
@@ -57,19 +58,20 @@ authRouter.post("/signin", async (req, res) => {
       const body = req.body;
       const parsed = siginSchema.safeParse(body);
       if (!parsed.success) {
-         throw Error("Invalid request body in signin");
+         return res.status(400).json({message:"invalid request body",error:parsed.error?.message})
       }
       const foundUser = await prisma.user.findUnique({
          where: {
             email: body.email
          }
       })
+
       if (!foundUser) {
-         throw new Error("user not found");
+         return res.status(404).json({ message: "user not found", error: "Unable to find user in database" })
       }
 
       if( !await comparePassword(parsed.data.password,foundUser.password)){
-         throw new Error("Password is incorrect");
+         return res.status(401).json({ message: "incorrect password", error: "password didn't match " })
       }
 
       const id = foundUser.id;
@@ -83,9 +85,10 @@ authRouter.post("/signin", async (req, res) => {
          httpOnly: true,
          secure: process.env.NODE_ENV === "production",
          sameSite: "lax",
-      }).json({ message: "request received", foundUser });
+      }).json({ message: "user found signin success"});
 
    } catch (error: any) {
-      return res.json({ message: "request received", error: error.message }).status(400);
+      console.log("error in signin",error)
+      return res.status(500).json({ message: "unexcepted error in signin", error: error.message })
    }
 });
