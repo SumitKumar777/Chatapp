@@ -1,8 +1,12 @@
 docker-compose -f docker-compose.test.yaml up -d --build
-echo ' - Waiting for database to be ready...'
-./scripts/wait-for-it.sh "postgresql://user:pass@localhost:5432/db" -- echo ' - Database is ready!'
+echo ' - Waiting for Postgres...'
+./scripts/wait-for-it.sh localhost:5432 -- echo ' - Postgres is ready!'
+
+echo ' - Waiting for Redis...'
+./scripts/wait-for-it.sh localhost:6379 -- echo ' - Redis is ready!'
+
 echo ' - Running migrations...'
-pnpm --filter @repo/db run  prisma migrate deploy
+pnpm --filter @repo/db run prisma migrate reset --force
 pnpm --filter @repo/http-backend run test:integration
 
 docker-compose -f docker-compose.test.yaml down

@@ -1,18 +1,27 @@
 
 import { createClient ,RedisClientType } from "redis";
 
-const PORT = 3001;
+
+let client:RedisClientType|null=null;
 
 
-const producerClient: RedisClientType = createClient({
-   url: process.env.REDIS_URL || "redis://localhost:6379"
-});
+export default async function getRedisClient() {
 
-async function connectClient(){
-   if(!producerClient.isOpen){
-      await producerClient.connect();
-      console.log("client connected");
+   if(client && client.isOpen){
+      return client;
    }
+
+   client= createClient({
+      url: process.env.REDIS_URL || "redis://localhost:6379",
+   })
+
+   client.on("error",(error)=>{
+      console.log("error on client",error)
+   })
+
+
+   await client.connect();
+   return client;
+
 }
 
-export {producerClient,connectClient};

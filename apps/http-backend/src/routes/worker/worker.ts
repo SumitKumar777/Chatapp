@@ -3,12 +3,11 @@
 
 import { createClient } from "redis";
 import prisma from "@repo/db";
+import getRedisClient from "./redisClient.js";
 
 
 
-
-
-import { producerClient } from "./redisClient.js";
+const producerClient=await getRedisClient();
 
 
 const client = createClient({

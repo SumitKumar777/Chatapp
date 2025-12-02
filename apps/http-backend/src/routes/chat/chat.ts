@@ -2,12 +2,13 @@ import express, { Request, Response } from "express";
 import { authUser } from "../../middleware/middle.js";
 import { roomMessage } from "@repo/types";
 import prisma from "@repo/db";
-import { producerClient } from "../worker/redisClient.js";
+import getRedisClient from "../worker/redisClient.js";
+
 
 export const chatRouter: express.Router = express.Router();
 
 
-
+const producerClient=await getRedisClient();
 
 type ChatMessage = {
    id: number,
@@ -28,7 +29,7 @@ chatRouter.post("/message", authUser, async (req: Request, res: Response) => {
       const data = req.body;
       const parsed = roomMessage.safeParse(data);
       if (!parsed.success) {
-         throw new Error("Invalid request body in message body ");
+         return res.status(400).json({ message: "invalid request body", error: parsed.error?.message })
       }
       const userId = req.userId;
 
@@ -49,12 +50,6 @@ chatRouter.post("/message", authUser, async (req: Request, res: Response) => {
       }
    }
 })
-
-
-
-
-
-
 
 
 

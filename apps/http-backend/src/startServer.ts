@@ -1,14 +1,17 @@
 
-import {  connectClient } from "./routes/worker/redisClient.js";
+
 import  { startWorker } from "./routes/worker/worker.js";
 import { app } from "./index.js";
+import getRedisClient from "./routes/worker/redisClient.js";
+
+
 
 
 const PORT = 3001;
 async function startServer() {
 
    try {
-      await connectClient();
+      await getRedisClient();
       startWorker();
 
       app.listen(PORT, () => console.log(`app is listening on port ${PORT}`))

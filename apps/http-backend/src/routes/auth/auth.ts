@@ -13,7 +13,7 @@ export const authRouter:Router=express.Router();
 const JWT_SECRET = process.env.JWT_SECRET;
 
 
-const hashPassword=(password:string):Promise<string>=>{
+export const hashPassword=(password:string):Promise<string>=>{
 
    return bcrypt.hash(password,10);
 }
@@ -34,17 +34,25 @@ authRouter.post("/signup", async (req, res) => {
       }
       const { username, email, password }: SignUpSchema = parsed.data;
 
-      const hashedPassword=await hashPassword(password);
-
-
-       await prisma.user.create({
-         data: {
-            username,
-            email,
-            password:hashedPassword
+      const foundUser= await prisma.user.findUnique({
+         where:{
+            email:parsed.data.email
          }
-      });
-      
+      })
+
+      if(!foundUser){
+         const hashedPassword = await hashPassword(password);
+
+         await prisma.user.create({
+            data: {
+               username,
+               email,
+               password: hashedPassword
+            }
+         });
+
+      }
+     
       res.status(201).json({ message: "user Created" });
 
    } catch (error: any) {
@@ -62,7 +70,7 @@ authRouter.post("/signin", async (req, res) => {
       }
       const foundUser = await prisma.user.findUnique({
          where: {
-            email: body.email
+            email: parsed.data.email
          }
       })
 

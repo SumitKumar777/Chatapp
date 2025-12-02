@@ -6,8 +6,7 @@ declare global {
   namespace Express {
     interface Request {
       userId?: string; 
-      username:string;
-      
+      username?: string;
     }
   }
 }
@@ -15,6 +14,7 @@ declare global {
 export function authUser(req:Request<{},{},{}>,  res:Response, next: NextFunction) {
    try {
       const token = req.cookies.Authorization;
+
       if (!token) {
          throw new Error("unauthenticated user no token");
       }
@@ -25,8 +25,12 @@ export function authUser(req:Request<{},{},{}>,  res:Response, next: NextFunctio
          throw new Error("unauthenticated user");
       }
 
+
+
       req.userId=decode.id;
       req.username=decode.username;
+
+      
 
       next();
    } catch (error:any) {
