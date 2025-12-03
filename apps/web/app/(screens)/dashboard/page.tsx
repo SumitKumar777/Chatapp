@@ -115,7 +115,6 @@ const BACKEND_URL =
 							try {
 								parsedData = JSON.parse(data);
 							} catch {
-								console.log("Received non-JSON message:", data);
 								return;
 							}
 
