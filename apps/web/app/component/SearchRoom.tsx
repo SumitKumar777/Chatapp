@@ -17,6 +17,8 @@ function SearchRoom() {
 		const setCurrentRoomId = useSocket((state) => state.setCurrentRoomId);
 		const setCurrentRoomName = useSocket((state) => state.setCurrentRoomName);
 
+	const BACKEND_URL =
+		process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:3001";
 
 
    const fetchRoomDetail=async(searchParam:string)=>{
@@ -27,9 +29,8 @@ function SearchRoom() {
          return;
       }
 
-      const fetchRoom=await axios.get(process.env.NODE_ENV === "development"
-            ? `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/room/searchRoom/${searchParam}`
-            : `/api/room/searchRoom/${searchParam}`,
+      const fetchRoom=await axios.get(
+             `${BACKEND_URL}/api/room/searchRoom/${searchParam}`,
          {withCredentials:true}
       );
       setRoomDetail(fetchRoom.data.data);
@@ -55,11 +56,8 @@ function SearchRoom() {
             }
 				console.log(roomId, "roomId in the create rooomFrom");
 
-				console.log(`${process.env.NEXT_PUBLIC_BACKEND_URL}`, "backend");
-				const joinRoomResponse = await axios.post(
-			 			process.env.NODE_ENV === "development"
-					? `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/room/joinroom`
-					: "/api/room/joinroom",
+
+				const joinRoomResponse = await axios.post(`${BACKEND_URL}/api/room/joinroom`,
 					{
 						roomId,
 					},

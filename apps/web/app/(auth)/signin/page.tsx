@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 
 
 
+
 const SignIn = () => {
 	const router = useRouter();
 
@@ -15,10 +16,9 @@ const SignIn = () => {
 		const password = form.get("password");
 
 		try {
+			const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:3001";
 			const signinResponse = await axios.post(
-				process.env.NODE_ENV === "development"
-					? `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/auth/signin`
-					: "/api/auth/signin",
+				`${BACKEND_URL}/api/auth/signin`,
 				{
 					email,
 					password,

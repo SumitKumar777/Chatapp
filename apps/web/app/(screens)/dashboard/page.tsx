@@ -56,7 +56,8 @@ function Dashboard() {
   const setUserName = userDetail((state) => state.setUserName);
   const isSidebarOpen = userUtils((state) => state.isSidebarOpen);
 
-
+const BACKEND_URL =
+	process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:3001";
 
   useEffect(() => {
     const getTokenAndConnect = async () => {
@@ -64,10 +65,7 @@ function Dashboard() {
         const res = await fetch("/internal/token");
         const data = await res.json();
 
-          const roomList = await axios.get<RommListResponse>(
-						process.env.NODE_ENV === "development"
-							? `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/room/getAllRooms`
-							: "/api/room/getAllRooms",
+          const roomList = await axios.get<RommListResponse>( `${BACKEND_URL}/api/room/getAllRooms`,
 						{
 							withCredentials: true,
 						}

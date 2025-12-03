@@ -14,7 +14,8 @@ function RoomBlock({ roomName, roomId }: Rooms) {
   const setCurrentRoomName = useSocket((state) => state.setCurrentRoomName);
   const setIsSidebarOpen = userUtils((state) => state.setIsSidebarOpen);
 
-
+  const BACKEND_URL =
+		process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:3001";
 
 
 
@@ -64,10 +65,7 @@ function RoomBlock({ roomName, roomId }: Rooms) {
       if (connection === "not_Deleted") {
         throw new Error("not removed from the websocket backend");
       }
-       await axios.delete(
-        process.env.NODE_ENV === "development"
-          ? `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/room/leaveroom`
-          : "/api/room/leaveroom",
+       await axios.delete( `${BACKEND_URL}/api/room/leaveroom`,
         { data: { roomId }, withCredentials: true },
       );
 

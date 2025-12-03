@@ -74,7 +74,7 @@ roomRouter.get(
   async (req: Request, res) => {
     try {
       const roomId: string = req.query.roomId as string;
-      console.log("roomId", roomId);
+
       if (!roomId) {
         return res.status(400).json({
           message: "roomId is not present in roomDetails  request api",

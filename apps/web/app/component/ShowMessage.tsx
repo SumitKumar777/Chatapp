@@ -25,13 +25,11 @@ function ShowMessage() {
   const userId = userDetail((state) => state.userId);
   const setMessage = allMessage((state) => state.setMessage);
   const scrollRef = useRef<HTMLDivElement>(null);
+  const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:3001";
 
   useEffect(() => {
     const fetchMessage = async (roomId: string) => {
-      const messages = await axios.get(
-        process.env.NODE_ENV === "development"
-          ? `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/chat/getRoomChats/${roomId}`
-          : `/api/chat/getRoomChats/${roomId}`,
+      const messages = await axios.get(`${BACKEND_URL}/api/chat/getRoomChats/${roomId}`,
         {
           withCredentials: true,
         },

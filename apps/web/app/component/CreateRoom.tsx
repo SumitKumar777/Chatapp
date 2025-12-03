@@ -13,6 +13,9 @@ function CreateRoom() {
   const setCurrentRoomId = useSocket((state) => state.setCurrentRoomId);
   const setCurrentRoomName = useSocket((state) => state.setCurrentRoomName);
 
+  const BACKEND_URL =
+		process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:3001";
+
   const createRoom = async (e: React.FormEvent<HTMLFormElement>) => {
     const formObj = e.currentTarget;
     try {
@@ -20,13 +23,8 @@ function CreateRoom() {
       const form = new FormData(e.currentTarget);
 
       const roomName = form.get("roomName");
-      console.log(roomName, "roomName in the create rooomFrom");
 
-      console.log(`${process.env.NEXT_PUBLIC_BACKEND_URL}`, "backend");
-      const createRoomResponse = await axios.post(
-        process.env.NODE_ENV === "development"
-          ? `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/room/createroom`
-          : "/api/room/createroom",
+      const createRoomResponse = await axios.post( `${BACKEND_URL}/api/room/createroom`,
         {
           roomName,
         },
@@ -38,7 +36,7 @@ function CreateRoom() {
       if (!createRoomResponse || !createRoomResponse.data) {
         throw new Error("room not created in create room");
       }
-      console.log("createroomResponse", createRoomResponse);
+
       const roomData = {
         roomName: createRoomResponse.data.data.name,
         roomId: createRoomResponse.data.data.id,
