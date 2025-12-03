@@ -14,7 +14,6 @@ import SendMessage from "../../component/SendMessage";
 import userUtils from "../../store/hooks/userUtils";
 import Button from "../../component/Button";
 import UserAvatar from "../../component/UserAvatar";
-
 import { useRouter } from "next/dist/client/components/navigation";
 import  Logout  from "../../component/Logout";
 
@@ -211,7 +210,7 @@ const BACKEND_URL =
 								<RoomHeading />
                 <div className="flex items-center space-x-2 mr-4">
                   <UserAvatar  name={userName} />
-                  <Button className="bg-gray-700 text-white" onClick={async () => {
+                  <Button className="bg-gray-700 text-white"  onClick={async () => {
                     await Logout();
 
                     router.push("/signin");

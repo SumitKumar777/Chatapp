@@ -43,5 +43,5 @@ RUN pnpm build
 
 EXPOSE 3001
 
-CMD ["sh", "-c", "cd /app/packages/db && npx prisma migrate deploy && cd /app/apps/http-backend && pnpm start"]
+CMD ["sh", "-c", "cd /app/packages/db && npx prisma migrate deploy && pnpm seed && cd /app/apps/http-backend && pnpm start"]
 

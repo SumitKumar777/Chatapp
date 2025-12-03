@@ -27,6 +27,19 @@ roomRouter.post(
 
       const userId = req.userId;
 
+      const checkRoomExists = await prisma.room.findUnique({
+        where: {
+          name: parsed.data.roomName as string,
+        },
+      });
+      
+      if (checkRoomExists) {
+        return res.status(400).json({
+          status: "error",
+          message: "room with this name already exists",
+        });
+      }
+
       const roomCreated = await prisma.$transaction(
         async (tx: Prisma.TransactionClient) => {
           const room = await tx.room.create({

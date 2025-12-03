@@ -3,7 +3,7 @@ import React from "react";
 
 interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
    
-   classname?:string,
+   className?:string,
    type?:"button"| "submit"
 
 }

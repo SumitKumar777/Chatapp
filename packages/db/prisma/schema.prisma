@@ -30,7 +30,7 @@ model User {
 
 model Room {
   id          String   @id @default(uuid())
-  name        String
+  name        String   @unique
   createdById String
   createdAt   DateTime @default(now())
 
