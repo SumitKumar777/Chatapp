@@ -258,6 +258,9 @@ importers:
       '@types/node':
         specifier: ^22.15.3
         version: 22.15.3
+      playwright:
+        specifier: ^1.57.0
+        version: 1.57.0
 
   packages/eslint-config:
     devDependencies:
