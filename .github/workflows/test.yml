@@ -55,8 +55,8 @@ jobs:
           echo "REDIS_URL=redis://redis:6379" >> $GITHUB_ENV
       
       - name: Install Playwright Browsers
-        run: pnpm exec playwright install --with-deps
-      
+        run: pnpm --filter e2e-tests exec playwright install --with-deps
+
       - name:  services with docker-compose for end to end tests
         run: |
           docker compose -f docker-compose.yaml up -d --build
