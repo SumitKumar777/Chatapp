@@ -1,0 +1,55 @@
+name: tests workflow
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+
+jobs:
+  integration-tests:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '20'
+          cache: 'pnpm'
+
+      - name: Install dependencies
+        run: |
+          npm install -g pnpm
+          pnpm install
+      - name: Start services with docker-compose
+        run: |
+          docker-compose -f docker-compose.test.yaml up -d --build
+
+      - name: Run integration tests
+        run: |
+          chmod +x ./scripts/run-integrationtests.sh
+          ./scripts/run-integrationtests.sh
+      - name: Shutdown containers
+        if: always()
+        run: docker-compose -f docker-compose.test.yaml down
+
+      - name: Generate JWT secret for tests
+        run: echo "JWT_SECRET=$(openssl rand -hex 32)" >> $GITHUB_ENV
+      
+      - name: Start services with docker-compose for end to end tests
+        run: |
+          docker-compose -f docker-compose.yaml up -d --build
+
+      - name: Run end to end tests
+        run: |
+          chmod +x ./scripts/run-e2etests.sh
+          ./scripts/run-e2etests.sh
+      - name: Shutdown containers after end to end tests
+        if: always()
+        run: docker-compose -f docker-compose.yaml down
+

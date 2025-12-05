@@ -3,7 +3,7 @@ FROM node:22-alpine
 WORKDIR /app
 
 
-RUN apk add --no-cache openssl libc6-compat
+RUN apk add --no-cache openssl libc6-compat bash
 
 RUN npm install -g pnpm
 
@@ -11,6 +11,8 @@ RUN npm install -g pnpm
 COPY pnpm-workspace.yaml ./
 COPY package.json pnpm-lock.yaml ./
 
+COPY scripts/wait-for-it.sh ./wait-for-it.sh
+RUN chmod +x ./wait-for-it.sh
 
 COPY packages/db/package.json ./packages/db/
 COPY packages/types/package.json ./packages/types/
@@ -43,5 +45,5 @@ RUN pnpm build
 
 EXPOSE 3001
 
-CMD ["sh", "-c", "cd /app/packages/db && npx prisma migrate deploy && pnpm seed && cd /app/apps/http-backend && pnpm start"]
+CMD ["bash", "-c", "/app/wait-for-it.sh postgres:5432 -- bash -c 'cd /app/packages/db && npx prisma migrate deploy && pnpm seed && cd /app/apps/http-backend && pnpm start'"]
 
