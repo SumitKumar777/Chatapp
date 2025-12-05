@@ -1,7 +1,7 @@
 #!/bin/bash
 set -e
 
-docker-compose -f docker-compose.yaml up -d --build
+docker compose -f docker-compose.yaml up -d --build
 
 echo "⏳ Waiting for application to be ready..."
 ./scripts/wait-for-it.sh localhost:3001 -- echo " Backend is ready"
@@ -11,6 +11,6 @@ echo "⏳ Waiting for application to be ready..."
 echo "Running E2E tests"
 pnpm --filter e2e-tests run test:integration
 
-echo "  Tests passed"
+echo "Tests passed"
 
-docker-compose -f docker-compose.yaml down
+docker compose -f docker-compose.yaml down
