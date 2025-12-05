@@ -28,10 +28,15 @@ jobs:
       - name: Install dependencies
         run: pnpm install
 
-      - name: Generate JWT secret for tests
+      - name:  JWT secret for tests
         run: echo "JWT_SECRET=$(openssl rand -hex 32)" >> $GITHUB_ENV
 
-      - name: Start services with docker-compose
+      - name: env for integration tests
+        run: |
+          echo "DATABASE_URL=postgresql://user:pass@localhost:5432/db" >> $GITHUB_ENV
+          echo "REDIS_URL=redis://localhost:6379" >> $GITHUB_ENV
+
+      - name:  services with docker-compose
         run: |
           docker compose -f docker-compose.test.yaml up -d --build
 
@@ -40,12 +45,16 @@ jobs:
           chmod +x ./scripts/run-integrationtests.sh
           ./scripts/run-integrationtests.sh
 
-      - name: Shutdown containers
+      - name: Shutdown services
         if: always()
         run: docker compose -f docker-compose.test.yaml down
 
+      - name: Set env for e2e tests
+        run: |
+          echo "DATABASE_URL=postgresql://user:pass@postgres:5432/db" >> $GITHUB_ENV
+          echo "REDIS_URL=redis://redis:6379" >> $GITHUB_ENV
       
-      - name: Start services with docker-compose for end to end tests
+      - name:  services with docker-compose for end to end tests
         run: |
           docker compose -f docker-compose.yaml up -d --build
 
