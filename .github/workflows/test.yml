@@ -54,6 +54,9 @@ jobs:
           echo "DATABASE_URL=postgresql://user:pass@postgres:5432/db" >> $GITHUB_ENV
           echo "REDIS_URL=redis://redis:6379" >> $GITHUB_ENV
       
+      - name: Install Playwright Browsers
+        run: pnpm exec playwright install --with-deps
+      
       - name:  services with docker-compose for end to end tests
         run: |
           docker compose -f docker-compose.yaml up -d --build
