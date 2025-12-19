@@ -1,257 +1,378 @@
 import { WebSocket, WebSocketServer } from "ws";
-import url from "url";
-import jwt, { JwtPayload } from "jsonwebtoken";
+
 import path from "path";
 import { fileURLToPath } from "url";
-
+import { getRouter, routerTransport } from "./medaisoup/index.js";
+import {
+	addUsertoRoom,
+	allUser,
+	AuthUser,
+	authUser,
+	brodcastMessage,
+	removeUserfromRoom,
+} from "./functions/func.js";
+import {
+  Consumer,
+	Producer,
+	ProducerOptions,
+	Router,
+	RtpCapabilities,
+	WebRtcTransport,
+} from "mediasoup/types";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-
 if (!process.env.JWT_SECRET) {
-  const dotenv = await import("dotenv");
-  dotenv.config({ path: path.resolve(__dirname, "../../../.env") });
+	const dotenv = await import("dotenv");
+	dotenv.config({ path: path.resolve(__dirname, "../../../.env") });
 }
 
-
 if (!process.env.JWT_SECRET) {
-  throw new Error("JWT_SECRET environment variable is required");
+	throw new Error("JWT_SECRET environment variable is required");
 }
-
-
-
 
 const wss = new WebSocketServer({ port: 8080 });
 
-interface RequestBody {
-  type: string;
-  roomId: string;
-  message?: string;
-}
+const routerToSendTransport: Map<Router, WebRtcTransport> = new Map();
+const routerToRecvTransport: Map<Router, WebRtcTransport> = new Map();
 
-interface State {
-  userId: string;
-  socket: WebSocket;
-  rooms: string[];
-}
-interface UserSocket {
-  userId: string;
-  socket: WebSocket;
-}
+const roomIdToRouter: Map<string, Router> = new Map();
+const userToRouter: Map<string, Router[]> = new Map();
 
-interface AuthUser {
-  success: boolean;
-  userId: string | null;
-  username: string | null;
-}
+const sendTrnsToProducer: Map<WebRtcTransport, Producer[]> = new Map();
+const recvTrnsToConsumer: Map<WebRtcTransport, Consumer[]> = new Map();
 
-type UserInfo = {
-  userId: string;
-  username: string;
+const clientToRtpCapabilites:Map<WebSocket,RtpCapabilities>=new Map();
+
+type transportSuccess = {
+	ok: true;
+	routerRtpCapabilities: any;
+	sendTransportOptions: any;
+	recvTransportOptions: any;
 };
 
-const authUser = (reqUrl: string): AuthUser => {
-  const parsedUrl = url.parse(reqUrl, true);
-  const queryParams = parsedUrl.query;
-
-
-  if (queryParams.token) {
-    const decode = jwt.verify(
-      queryParams.token as string,
-      process.env.JWT_SECRET as string,
-    ) as JwtPayload;
-
-    return {
-      success: true,
-      userId: decode.id,
-      username: decode.username,
-    };
-  } else {
-    return {
-      success: false,
-      userId: null,
-      username: null,
-    };
-  }
+type transportFailure = {
+	ok: false;
+	error: string;
 };
 
-// store all the user when the add user message commes find that user from the allUser set and put that into the roomid because once the user connected only first time the user id we can have after that no user id we are able to access;
+type transportResult = transportSuccess | transportFailure;
 
-const allUser: Map<WebSocket, UserInfo> = new Map();
-
-const mainState: Map<string, UserSocket[]> = new Map();
-
-
-const addUsertoRoom = (roomId: string, userSocket: WebSocket) => {
-
-  const user = allUser.get(userSocket);
-  if (!user) {
-    console.log("user not found in adding user");
-
-    return;
-  }
-  // check for the first user
-  if (!mainState.has(roomId)) {
-    mainState.set(roomId, [{ userId: user.userId, socket: userSocket }]);
-
-    userSocket.send("user Connected");
-    return;
-  }
-
-  const roomUsers = mainState.get(roomId);
-   
-   const existinguser = roomUsers?.findIndex((u) => u.userId === user.userId) ;
-
-  if (existinguser === -1) {
-    roomUsers?.push({ userId: user.userId, socket: userSocket });
-  } else if (roomUsers) {
-    const existingUser = roomUsers.find(u => u.userId === user.userId);
-    
-    if (existingUser) {
-        existingUser.socket = userSocket;
-    } else {
-      console.log("in the addUser to room  replacing sockets");
-    }
-  }
-
-  userSocket.send("user connected");
+const createProducer = async (produceOptions: ProducerOptions) => {
+	try {
+	} catch (error) {}
 };
 
+const createConsumer = async () => {};
 
-const removeUserfromRoom = (roomId: string, userSocket: WebSocket) => {
-  const user = allUser.get(userSocket);
-  if (!user) {
-    console.log("no id in remove user from room");
-    return;
-  }
+const getTransport = (roomId: string, type: "send" | "receive") => {
+	try {
+		const roomRouter = roomIdToRouter.get(roomId);
+		if (!roomRouter) {
+			throw new Error("router not found in connect");
+		}
 
-  if (!mainState.has(roomId)) {
-    console.log("no such room in leave room ");
-    return;
-  }
+		const transport: WebRtcTransport =
+			type === "send"
+				? routerToSendTransport.get(roomRouter)!
+				: routerToRecvTransport.get(roomRouter)!;
 
-  const users = mainState.get(roomId);
+		if (!transport) {
+			throw new Error("tranport not found in get Transport");
+		}
 
-  const updatedUser = users?.filter((u) => u.userId !== user.userId);
-
-  updatedUser?.forEach((item) =>
-    console.log("all the users connected after removing room", item.userId),
-  );
-
-  if (updatedUser?.length === 0) {
-    mainState.delete(roomId);
-  } else {
-    mainState.set(roomId, updatedUser!);
-  }
-  userSocket.send("user left the room ");
+		return transport;
+	} catch (error) {
+		console.log("error in getTransport ", error);
+	}
 };
 
+const startVideoCall = async (
+	roomId: string,
+	connection: WebSocket
+): Promise<transportResult> => {
+	try {
+		const routerInstance = await getRouter(roomId);
+		if (!routerInstance) {
+			console.log(
+				"router creation failed in startVideoCall => ",
+				routerInstance
+			);
+			throw new Error("router not created");
+		}
 
+		const roomRouter = roomIdToRouter.get(roomId);
 
-const brodcastMessage = (
-  roomId: string,
-  message: string,
-  userSocket: WebSocket,
-) => {
-  if (!roomId || !message || !userSocket) {
-    console.log("function parameters are missing");
-    return;
-  }
+		if (!roomRouter) {
+			roomIdToRouter.set(roomId, routerInstance);
+		}
 
+		const sendTransport = await routerTransport(routerInstance);
+		const recvTransport = await routerTransport(routerInstance);
 
-  const user = allUser.get(userSocket);
+		const userId = allUser.get(connection)?.userId;
 
-  if (!user) {
-    console.log("user id not found in broadcast message");
-    return;
-  }
+		if (!userId) {
+			console.log("userId ", userId);
+			throw new Error("userId is not found ");
+		}
 
-  if (!mainState.has(roomId)) {
-    console.log("room id not present", roomId);
-  }
+		let existingUserRouters = userToRouter.get(userId);
 
-  const connectedUser = mainState.get(roomId)!;
-  console.log(
-    user.userId,
-    "userid which is broadcasting the message in broadcast ",
-  );
+		if (!existingUserRouters) {
+			existingUserRouters = [];
+			userToRouter.set(userId, existingUserRouters);
+		}
+		existingUserRouters.push(routerInstance);
 
-  connectedUser.forEach((item) =>
-    console.log("all the connected user for that room", item.userId),
-  );
+		const existingRouterSendTransports =
+			routerToSendTransport.get(routerInstance);
 
-  if (!connectedUser) {
-    console.log("roomId not found in broadcast message");
-    return;
-  }
+		if (!existingRouterSendTransports) {
+			routerToSendTransport.set(routerInstance, sendTransport);
+		}
 
-  const userPresent = connectedUser.some((item) => item.userId === user.userId);
+		const existingRouterRecvTransport =
+			routerToRecvTransport.get(routerInstance);
 
+		if (!existingRouterRecvTransport) {
+			routerToSendTransport.set(routerInstance, recvTransport);
+		}
 
+		const sendTransportOptions = {
+			id: sendTransport.id,
+			iceParameters: sendTransport.iceParameters,
+			iceCandidates: sendTransport.iceCandidates,
+			dtlsParameters: sendTransport.dtlsParameters,
+		};
+		const recvTransportOptions = {
+			id: recvTransport.id,
+			iceParameters: recvTransport.iceParameters,
+			iceCandidates: recvTransport.iceCandidates,
+			dtlsParameters: recvTransport.dtlsParameters,
+		};
 
-  if (!userPresent) {
-    console.log("user is not present", userPresent);
-    return;
-  }
+		return {
+			ok: true,
+			routerRtpCapabilities: routerInstance.rtpCapabilities,
+			sendTransportOptions,
+			recvTransportOptions,
+		};
+	} catch (error) {
+		let errorMessage;
+		if (error instanceof Error) {
+			console.log("error in start VedioCall", error);
+			errorMessage = error.message as string;
+		}
+		if (!errorMessage) {
+			console.log("error message not present", errorMessage);
+		}
 
-  connectedUser.forEach((u) => {
-    try {
-      u.socket.send(
-        JSON.stringify({
-          roomId,
-          userId: user.userId,
-          name: user.username,
-          time: new Date().toString(),
-          message,
-        }),
-      );
-    } catch (error) {
-      console.log(
-        `error sending to this user ${user.userId} in room ${roomId}`,
-      );
-    }
-  });
+		return { ok: false, error: errorMessage! };
+	}
 };
-
-
-
-
-
-
-
 
 wss.on("connection", (ws, request) => {
-  ws.on("error", (err) => console.log(err));
+	ws.on("error", (err) => console.log(err));
 
-  const user: AuthUser = authUser(request.url as string);
+	const user: AuthUser = authUser(request.url as string);
 
-  if (!user.success || !user.userId || !user.username) {
-    ws.send("not authenticated");
-    ws.close();
-    return;
-  }
-  allUser.set(ws, { userId: user.userId, username: user.username });
-  
-  ws.on("message", (data: string) => {
-    try {
-      const parsedData: RequestBody = JSON.parse(data);
-      const { type, roomId, message } = parsedData;
+	if (!user.success || !user.userId || !user.username) {
+		ws.send("not authenticated");
+		ws.close();
+		return;
+	}
+	allUser.set(ws, { userId: user.userId, username: user.username });
 
-      if (type === "join_room") {
-        addUsertoRoom(roomId, ws);
+	ws.on("message", async (data: string) => {
+		try {
+			const parsedData = JSON.parse(data);
+			const { type, roomId, message, ...rest } = parsedData;
+
+			if (type === "join_room") {
+				addUsertoRoom(roomId, ws);
+			}
+			if (type === "leave_room") {
+				removeUserfromRoom(roomId, ws);
+			}
+			if (type === "message") {
+				brodcastMessage(roomId, message!, ws);
+			}
+
+			if (type === "startVideoCall") {
+				try {
+					const callResult = await startVideoCall(roomId, ws);
+
+					if (!callResult.ok) {
+						console.log("error in startVideoCall", callResult.error);
+						throw new Error("error while startVideocall");
+					}
+
+					ws.send(
+						JSON.stringify({
+							type: "transportOptions",
+							routerRtpCapabilities: callResult.routerRtpCapabilities,
+							sendTransportOptions: callResult.sendTransportOptions,
+							recvTransportOptions: callResult.recvTransportOptions,
+						})
+					);
+				} catch (error) {
+					console.log(error);
+				}
+			}
+
+      if (type ==="client-rtpCapabilites"){
+        const clientRtpCapabilites = parsedData.clientRtpCapabilities;
+        if(!clientRtpCapabilites){
+          console.log("clientRtpCapabilites is not present");
+        }else{
+          clientToRtpCapabilites.set(ws,clientRtpCapabilites);
+        }
+
       }
-      if (type === "leave_room") {
 
-        removeUserfromRoom(roomId, ws);
+			if (type === "sendTransport-connect") {
+				try {
+					const sendTransportInstance = getTransport(roomId, "send");
+
+					if (!sendTransportInstance) {
+						throw new Error("sendTranport not in tranport connect");
+					}
+
+					await sendTransportInstance.connect(rest.dtlsParameters);
+
+					console.log("transport connected");
+				} catch (error) {
+					console.log("error in tranport connect", error);
+				}
+			}
+
+			if (type === "recvTransport-connect") {
+				try {
+					const recvTranportInstance = getTransport(roomId, "receive");
+
+					if (!recvTranportInstance) {
+						throw new Error("recvTranport not in tranport connect");
+					}
+
+					await recvTranportInstance.connect(rest.dtlsParameters);
+
+					console.log("transport connected");
+				} catch (error) {
+					console.log("error in tranport connect", error);
+				}
+			}
+
+			if (type === "transport-produce") {
+				try {
+					const sendTransportInstance = getTransport(roomId, "send");
+
+					if (!sendTransportInstance) {
+						throw new Error("sendTranport not in producer creation ");
+					}
+
+					const producerInstance = await sendTransportInstance.produce({
+						kind: rest.kind,
+						rtpParameters: rest.rtpParameters,
+					});
+
+					let existingProducer = sendTrnsToProducer.get(sendTransportInstance);
+
+					if (!existingProducer) {
+						existingProducer = [];
+						sendTrnsToProducer.set(sendTransportInstance, existingProducer);
+					}
+
+					existingProducer.push(producerInstance);
+
+					ws.send(
+						JSON.stringify({
+							type: "producerCreated",
+							success: true,
+							producerId: producerInstance.id,
+							requestId: parsedData.requestId,
+						})
+					);
+
+					console.log("producer created ");
+				} catch (error) {
+					console.log("error in tranport connect", error);
+					ws.send(
+						JSON.stringify({
+							type: "producerCreated",
+							success: false,
+							requestId: parsedData.requestId,
+              error
+						})
+					);
+				}
+			}
+
+      if (type ==="createConsumer"){
+       try {
+         const { roomId, producerId, clientRtpCapabilites } = parsedData;
+
+         if (!(roomId && producerId && clientRtpCapabilites)) {
+           console.log("roomId => ", roomId, "producerId", producerId, "clientRtpCapabilites => ", clientRtpCapabilites);
+           throw new Error("client request parameters are missing")
+         }
+         
+         const routerInstance = roomIdToRouter.get(roomId);
+
+         if(!routerInstance){
+          throw new Error("router is missing");
+         }
+
+         if (!(routerInstance.canConsume({ producerId, rtpCapabilities: clientRtpCapabilites }))){
+          console.log("consumption failed");
+          throw new Error("consumption failed");
+         }
+
+         const recvTranportInstance=routerToRecvTransport.get(routerInstance);
+         
+         if(!recvTranportInstance){
+          console.log("recv transport is not found");
+          throw new Error("transport not found");
+         }
+
+         const newConsumer= await recvTranportInstance.consume(
+          {
+             producerId:producerId,
+             rtpCapabilities:clientRtpCapabilites,
+             paused:true
+          }
+         )
+
+
+         let existingConsumer= recvTrnsToConsumer.get(recvTranportInstance);
+
+         if(!existingConsumer){
+          existingConsumer=[];
+          recvTrnsToConsumer.set(recvTranportInstance,existingConsumer);
+         }
+
+         existingConsumer.push(newConsumer);
+
+         const consumerOptions={
+          id:newConsumer.id,
+          producerId,
+          kind:newConsumer.kind,
+          rtpParameters:newConsumer.rtpParameters
+         }
+
+
+         ws.send(JSON.stringify({type:"createdConsumerResponse",success:true,consumerOptions}))
+
+       } catch (error) {
+        console.log("error in the createConsumer",error);
+         ws.send(JSON.stringify({ type:"createdConsumerResponse",success:false}))
+       }
       }
-      if (type === "message") {
-        brodcastMessage(roomId, message!, ws);
-      }
-    } catch (error) {
-      console.log(data.toString(), "data in the websocket");
-      console.log(error, "error in the message");
-    }
-  });
-  ws.send("hi from the server");
+		} catch (error) {
+			console.log(data.toString(), "data in the websocket");
+			console.log(error, "error in the message");
+		}
+	});
+	ws.send("hi from the server");
 });
