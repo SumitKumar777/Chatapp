@@ -1,8 +1,10 @@
-FROM node:22-alpine
-
-
+FROM node:22-bookworm
 WORKDIR /app
-
+RUN apt-get update && apt-get install -y \
+   python3 \
+   python3-pip \
+   build-essential \
+   && rm -rf /var/lib/apt/lists/*
 
 RUN npm install -g pnpm 
 

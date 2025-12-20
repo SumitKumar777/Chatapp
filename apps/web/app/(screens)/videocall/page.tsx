@@ -1,37 +1,36 @@
 import { useEffect, useRef } from "react";
-import useSocket from "../../store/hooks/useSocket";
+import { VideoCall } from "../../services/videoCall";
 
 
 
 
 function VideoCallPage() {
-   const socket =  useSocket((state) => state.socket);
-   const localVideoRef= useRef<HTMLVideoElement|null>(null);
 
-   const getUserMediaAccess=async ()=>{
-      const streams=await navigator.mediaDevices.getUserMedia({video:true,audio:true});
-      
-   }
+   const localVideoRef= useRef<HTMLVideoElement|null>(null);
+   const remoteVideoRef= useRef<HTMLVideoElement|null>(null);
 
    useEffect(()=>{
-      if(socket?.readyState===WebSocket.OPEN){
+      const videoInstance = VideoCall.getInstance();
 
-         socket.onmessage=()=>{
-            
+         if (localVideoRef.current && videoInstance.localStreams) {
+						localVideoRef.current.srcObject =videoInstance.localStreams
+					}
+         if(remoteVideoRef.current){
+            remoteVideoRef.current.srcObject=videoInstance.remoteStream
          }
-      }else{
-         console.log("userConnection is not open");
-      }
-   })
 
+   
+   },[])
 
 
   return (
-    <div>
-      <h1>Video Call Page</h1>
+		<div>
+			<h1>Video Call Page</h1>
 
-    </div>
-  );
+			<video ref={localVideoRef}></video>
+			<video ref={remoteVideoRef}></video>
+		</div>
+	);
 }
 
 export default VideoCallPage;

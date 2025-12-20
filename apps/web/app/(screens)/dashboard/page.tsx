@@ -17,12 +17,7 @@ import userUtils from "../../store/hooks/userUtils";
 import UserAvatar from "../../component/UserAvatar";
 import { useRouter } from "next/dist/client/components/navigation";
 
-import { Device } from "mediasoup-client";
-import {
-	RtpCapabilities,
-	Transport,
-	TransportOptions,
-} from "mediasoup-client/types";
+import { VideoCall } from "../../services/videoCall";
 
 interface RoomList {
 	roomName: string;
@@ -58,17 +53,8 @@ function Dashboard() {
 	const setUserName = userDetail((state) => state.setUserName);
 	const isSidebarOpen = userUtils((state) => state.isSidebarOpen);
 
-	const device = useRef<Device | null>(null);
-	const userSendTranport = useRef<Transport | null>(null);
-	const userRecvTransport = useRef<Transport | null>(null);
-	const localStreams = useRef<MediaStream | null>(null);
-	const localVideoRef = useRef<HTMLVideoElement | null>(null);
-	const remoteVideoRef = useRef<HTMLVideoElement | null>(null);
-
-	const pendingCallbacks = useRef<
-		Map<string, { callback: Function; errback: Function }>
-	>(new Map());
-
+  const startCallFunc= useRef<(currentRoomId:string)=>void|null>(null);
+	
 	const BACKEND_URL =
 		process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:3001";
 
@@ -92,6 +78,15 @@ function Dashboard() {
 					const connection = new WebSocket(
 						`${process.env.NEXT_PUBLIC_WEBSOCKET_BACKEND_URL}/ws?token=${data.token}`
 					);
+
+          const videoCallInstance= VideoCall.getInstance();
+
+          if(!videoCallInstance){
+            throw new Error("videoCallInstance is not initialized");
+          }
+
+          await videoCallInstance.connect(data.token);
+          startCallFunc.current=videoCallInstance.initVideoCall;
 
 					let hasOpened = false;
 
@@ -149,82 +144,7 @@ function Dashboard() {
 							}
 						}
 
-						if (type === "transportOptions") {
-							try {
-								const {
-									routerRtpCapabilities,
-									sendTransportOptions,
-									recvTransportOptions,
-								} = parsedData;
-								const deviceResult = await createDevice(routerRtpCapabilities);
 
-								if (!deviceResult.status) {
-									throw new Error("device Creation failed");
-								}
-
-								createSendTransport(sendTransportOptions);
-								createRecvTransport(recvTransportOptions);
-							} catch (error) {
-								console.log(
-									"error on TransportOptions on webSocketConnection",
-									error
-								);
-							}
-						}
-
-						if (type === "producerCreated") {
-							try {
-								const pendingCalls = pendingCallbacks.current.get(
-									parsedData.requestId
-								);
-
-								if (!pendingCalls) {
-									throw new Error(
-										"request Id is missing in server response producerCreated"
-									);
-								}
-
-								if (parsedData.success) {
-									pendingCalls.callback(parsedData.producerId);
-									connection.send(
-										JSON.stringify({
-											type: "createConsumer",
-											roomId: currentRoomId,
-											producerId: parsedData.producerId,
-											clientRtpCapabilites: device.current?.rtpCapabilities,
-										})
-									);
-								} else {
-									pendingCalls.errback(parsedData.error);
-								}
-
-								pendingCallbacks.current.delete(parsedData.requestId);
-							} catch (error) {
-								console.log("error in producer created", error);
-							}
-						}
-
-						if (type === "createdConsumerResponse") {
-							try {
-								if (parsedData.success) {
-									const localConsumer =
-										await userRecvTransport.current?.consume(
-											parsedData.consumerOptions
-										);
-
-									if (!localConsumer) {
-										throw new Error("cosumer not created");
-									}
-
-									const { track } = localConsumer;
-									// remoteVideoRef.current?.srcObject= new MediaStream([track]);
-								} else {
-									console.log("consumer not created");
-								}
-							} catch (error) {
-								console.log("error in the createdConsumerResponse", error);
-							}
-						}
 					};
 					connection.onclose = () => {
 						console.log("connection closed on dashboard ");
@@ -276,167 +196,7 @@ function Dashboard() {
 		}
 	}, [socket]);
 
-	const createDevice = async (
-		routerRtpCapabilities: any
-	): Promise<{ status: true | false }> => {
-		try {
-			const deviceInstance = new Device();
-
-			await deviceInstance.load(routerRtpCapabilities);
-
-			device.current = deviceInstance;
-
-			console.log("device is created and loaded ");
-
-			socket?.send(
-				JSON.stringify({
-					type: "client-rtpCapabilites",
-					clientRtpCapabilities: deviceInstance.rtpCapabilities,
-				})
-			);
-
-			return { status: true };
-		} catch (error) {
-			console.log("error in creating the device ", error);
-			return { status: false };
-		}
-	};
-
-	const createSendTransport = (sendTransportOptions: TransportOptions) => {
-		if (!device.current) {
-			throw new Error("device is not present");
-		}
-		console.log("sendTransOptions", sendTransportOptions);
-
-		const sendTranport: Transport =
-			device.current.createSendTransport(sendTransportOptions);
-
-		sendTranport.on("connect", ({ dtlsParameters }, callback, errback) => {
-			try {
-				if (!socket) {
-					throw new Error("socket not found in createSendTransport");
-				}
-				socket.send(
-					JSON.stringify({
-						type: "sendTransport-connect",
-						roomId: currentRoomId,
-						dtlsParameters: dtlsParameters,
-					})
-				);
-
-				callback();
-			} catch (error: unknown) {
-				if (error instanceof Error) {
-					errback(error);
-				} else {
-					console.log("error in createSendTransport not Error Instance", error);
-				}
-			}
-		});
-
-		sendTranport.on("produce", (parameters, callback, errback) => {
-			const requestId = crypto.randomUUID();
-
-			pendingCallbacks.current.set(requestId, { callback, errback });
-
-			const data = socket?.send(
-				JSON.stringify({
-					type: "transport-produce",
-					requestId,
-					transportId: sendTranport.id,
-					kind: parameters.kind,
-					rtpParameters: parameters.rtpParameters,
-				})
-			);
-
-			console.log("transport-producer sent to server");
-		});
-
-		userSendTranport.current = sendTranport;
-	};
-
-	const createRecvTransport = (recvTransportOptions: TransportOptions) => {
-		if (!device.current) {
-			throw new Error("device is not present in createRecv");
-		}
-		console.log("recvOptions=> ", recvTransportOptions);
-
-		const recvTransport =
-			device.current.createRecvTransport(recvTransportOptions);
-
-		recvTransport.on("connect", ({ dtlsParameters }, callback, errback) => {
-			try {
-				if (!socket) {
-					throw new Error("socket not found in createSendTransport");
-				}
-				socket.send(
-					JSON.stringify({
-						type: "recvTransport-connect",
-						roomId: currentRoomId,
-						dtlsParameters: dtlsParameters,
-					})
-				);
-
-				callback();
-			} catch (error: unknown) {
-				if (error instanceof Error) {
-					errback(error);
-				} else {
-					console.log(
-						"error in recTransport connect not Error Instance",
-						error
-					);
-				}
-			}
-		});
-
-		userRecvTransport.current = recvTransport;
-	};
-
-	const initVideoCall = () => {
-		socket?.send(
-			JSON.stringify({ type: "startVideoCall", roomId: currentRoomId })
-		);
-		// setLoading = true and make it false when the user gets message on the socket
-		console.log("initVideoFuncCalled");
-	};
-
-	const getUserMediaAccess = async () => {
-		const stream = await navigator.mediaDevices.getUserMedia({
-			video: true,
-			audio: true,
-		});
-
-		if (!localStreams.current) {
-			localStreams.current = stream;
-		}
-		console.log("accessed userMedia");
-	};
-
-	const createProducer = async () => {
-		try {
-			if (!userSendTranport.current) {
-				throw new Error("clientSendTransport is not found");
-			}
-			const videoTrack = localStreams.current?.getVideoTracks()[0];
-			const producerInstance = await userSendTranport.current.produce({
-				track: videoTrack,
-				encodings: [
-					{ maxBitrate: 100000 },
-					{ maxBitrate: 300000 },
-					{ maxBitrate: 900000 },
-				],
-				codecOptions: {
-					videoGoogleStartBitrate: 1000,
-				},
-			});
-
-			console.log("client videoProducer created");
-		} catch (error) {
-			console.log("error in createProducer", error);
-		}
-	};
-
+	
 	return (
 		<>
 			<div className="bg-black/60 w-full h-full">
@@ -456,7 +216,17 @@ function Dashboard() {
 							<div className="flex justify-between ">
 								<RoomHeading />
 								<div className="flex items-center space-x-2 mr-4">
-									<p className="bg-amber-300 text-2xl" onClick={initVideoCall}>
+									<p className="bg-amber-300 text-2xl" onClick={()=>{
+                    if(!startCallFunc.current){
+                      console.log("startCall Function is available");
+                    }else{
+                      if(currentRoomId){
+                         startCallFunc.current(currentRoomId);
+                      }else{
+                        console.log("roomId is missing for calling startCallFunc");
+                      }
+                    }
+                  }}>
 										V
 									</p>
 									<UserAvatar name={userName} />

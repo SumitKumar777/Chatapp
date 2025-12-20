@@ -59,12 +59,54 @@ type transportFailure = {
 
 type transportResult = transportSuccess | transportFailure;
 
+type GetConsumerSuccess={
+  success:true;
+  consumer:Consumer;
+}
+type GetConsumerFailure = {
+  success: false;
+  error: Error;
+}
+
+type GetConsumerResult= GetConsumerFailure|GetConsumerSuccess;
+
 const createProducer = async (produceOptions: ProducerOptions) => {
 	try {
 	} catch (error) {}
 };
 
 const createConsumer = async () => {};
+
+
+const getConsumer=(consumerId:string,roomId:string):GetConsumerResult=>{
+ try {
+   if (!(consumerId && roomId)) {
+     throw new Error("parameter are missing");
+   }
+
+   const getTransportInstance = getTransport(roomId, "receive")
+
+   if(!getTransportInstance){
+    throw new Error('transport not found');
+   }
+
+   const consumerInstance= recvTrnsToConsumer.get(getTransportInstance)?.filter(consumer=>consumer.id===consumerId)[0];
+
+   if(!consumerInstance){
+    throw new Error("consumer not found");
+   }
+
+   return {success:true,consumer:consumerInstance};
+
+ } catch (error) {
+  console.log("error in getting Consumer",error);
+  if(error instanceof Error){
+    return { success: false, error }
+  }
+   return { success: false, error:error as Error }
+ }
+
+}
 
 const getTransport = (roomId: string, type: "send" | "receive") => {
 	try {
@@ -368,6 +410,26 @@ wss.on("connection", (ws, request) => {
         console.log("error in the createConsumer",error);
          ws.send(JSON.stringify({ type:"createdConsumerResponse",success:false}))
        }
+      }
+      if (type ==="resumeConsumer"){
+        // implement the resuming logic
+        try {
+          if(!rest.consumerId){
+            throw new Error("consumerId is missing in parsedData");
+          }
+          const consumerInstance = getConsumer(rest.consumerId,roomId);
+
+          if(!consumerInstance.success){
+            throw new Error("failed to get Consumer");
+          }
+
+          consumerInstance.consumer.resume();
+          console.log("consumer resumed");
+          
+
+        } catch (error) {
+          console.log("error in resumerConsuemr",error);
+        }
       }
 		} catch (error) {
 			console.log(data.toString(), "data in the websocket");
