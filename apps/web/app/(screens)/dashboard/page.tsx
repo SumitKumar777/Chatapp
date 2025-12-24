@@ -1,7 +1,7 @@
 "use client";
 import axios from "axios";
 import { nanoid } from "nanoid";
-import { useEffect, useRef } from "react";
+import { use, useEffect, useRef } from "react";
 import Button from "../../component/Button";
 import Logout from "../../component/Logout";
 import JoinRoom from "../../component/JoinRoom";
@@ -53,7 +53,7 @@ function Dashboard() {
 	const setUserName = userDetail((state) => state.setUserName);
 	const isSidebarOpen = userUtils((state) => state.isSidebarOpen);
 
-  const startCallFunc= useRef<(currentRoomId:string)=>void|null>(null);
+  const startCallFunc= useRef<(currentRoomId:string)=>Promise<void>|null>(null);
 	
 	const BACKEND_URL =
 		process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:3001";
@@ -79,15 +79,7 @@ function Dashboard() {
 						`${process.env.NEXT_PUBLIC_WEBSOCKET_BACKEND_URL}/ws?token=${data.token}`
 					);
 
-          const videoCallInstance= VideoCall.getInstance();
-
-          if(!videoCallInstance){
-            throw new Error("videoCallInstance is not initialized");
-          }
-
-          await videoCallInstance.connect(data.token);
-          startCallFunc.current=videoCallInstance.initVideoCall;
-
+        
 					let hasOpened = false;
 
 					connection.onopen = () => {
@@ -196,6 +188,32 @@ function Dashboard() {
 		}
 	}, [socket]);
 
+	useEffect(() => {
+		const getTokenAndVideoConnect= async () => {
+				try {
+					const res = await fetch("/internal/token");
+					const data = await res.json();
+
+					if (data.token === undefined) {
+						throw new Error("token is undefined ");
+					}
+					const videoCallInstance = VideoCall.getInstance();
+
+					if (!videoCallInstance) {
+						throw new Error("videoCallInstance is not initialized");
+					}
+
+					await videoCallInstance.connect(data.token);
+					startCallFunc.current = videoCallInstance.initVideoCall;
+				} catch (error) {
+					console.log("error in video call connection ", error);
+				}
+		}
+		if (!socket && socket === null) {
+			getTokenAndVideoConnect();
+		}
+		
+	}, []);
 	
 	return (
 		<>
@@ -216,12 +234,13 @@ function Dashboard() {
 							<div className="flex justify-between ">
 								<RoomHeading />
 								<div className="flex items-center space-x-2 mr-4">
-									<p className="bg-amber-300 text-2xl" onClick={()=>{
+									<p className="bg-amber-300 text-2xl" onClick={async ()=>{
                     if(!startCallFunc.current){
                       console.log("startCall Function is available");
                     }else{
                       if(currentRoomId){
-                         startCallFunc.current(currentRoomId);
+                         await startCallFunc.current(currentRoomId);
+								 router.push("/videocall");
                       }else{
                         console.log("roomId is missing for calling startCallFunc");
                       }

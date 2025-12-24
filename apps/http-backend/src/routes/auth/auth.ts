@@ -4,7 +4,8 @@ import jwt from "jsonwebtoken";
 import prisma from "@repo/db";
 import { siginSchema, SignUpSchema, signupSchema } from "@repo/types";
 import bcrypt from "bcrypt";
-import { error } from "console";
+
+
 
 
 export const authRouter:Router=express.Router();

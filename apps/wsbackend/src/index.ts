@@ -10,6 +10,7 @@ import {
 	authUser,
 	brodcastMessage,
 	removeUserfromRoom,
+	UserInfo,
 } from "./functions/func.js";
 import {
   Consumer,
@@ -19,6 +20,7 @@ import {
 	RtpCapabilities,
 	WebRtcTransport,
 } from "mediasoup/types";
+
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -44,6 +46,8 @@ const sendTrnsToProducer: Map<WebRtcTransport, Producer[]> = new Map();
 const recvTrnsToConsumer: Map<WebRtcTransport, Consumer[]> = new Map();
 
 const clientToRtpCapabilites:Map<WebSocket,RtpCapabilities>=new Map();
+
+const videoCallConnections:Map<WebSocket,UserInfo>= new Map();
 
 type transportSuccess = {
 	ok: true;
@@ -110,7 +114,12 @@ const getConsumer=(consumerId:string,roomId:string):GetConsumerResult=>{
 
 const getTransport = (roomId: string, type: "send" | "receive") => {
 	try {
+		if(!roomId){
+			console.log("type in roomId is not present ", type , "and roomId is ",roomId);
+			throw new Error("roomId is not present  ", )
+		}
 		const roomRouter = roomIdToRouter.get(roomId);
+		console.log("roomRouter in getTransport",roomRouter);
 		if (!roomRouter) {
 			throw new Error("router not found in connect");
 		}
@@ -147,13 +156,16 @@ const startVideoCall = async (
 		const roomRouter = roomIdToRouter.get(roomId);
 
 		if (!roomRouter) {
+
 			roomIdToRouter.set(roomId, routerInstance);
 		}
+
+
 
 		const sendTransport = await routerTransport(routerInstance);
 		const recvTransport = await routerTransport(routerInstance);
 
-		const userId = allUser.get(connection)?.userId;
+		const userId = videoCallConnections.get(connection)?.userId;
 
 		if (!userId) {
 			console.log("userId ", userId);
@@ -179,7 +191,7 @@ const startVideoCall = async (
 			routerToRecvTransport.get(routerInstance);
 
 		if (!existingRouterRecvTransport) {
-			routerToSendTransport.set(routerInstance, recvTransport);
+			routerToRecvTransport.set(routerInstance, recvTransport);
 		}
 
 		const sendTransportOptions = {
@@ -215,6 +227,7 @@ const startVideoCall = async (
 	}
 };
 
+
 wss.on("connection", (ws, request) => {
 	ws.on("error", (err) => console.log(err));
 
@@ -225,7 +238,13 @@ wss.on("connection", (ws, request) => {
 		ws.close();
 		return;
 	}
-	allUser.set(ws, { userId: user.userId, username: user.username });
+	if(user.type==="chat"){
+		allUser.set(ws, { userId: user.userId, username: user.username });
+	}else{
+		videoCallConnections.set(ws, { userId: user.userId, username: user.username });
+	}
+	
+	
 
 	ws.on("message", async (data: string) => {
 		try {
@@ -274,82 +293,86 @@ wss.on("connection", (ws, request) => {
 
       }
 
-			if (type === "sendTransport-connect") {
-				try {
-					const sendTransportInstance = getTransport(roomId, "send");
+		if (type === "sendTransport-connect") {
+			try {
+				const sendTransportInstance = getTransport(roomId, "send");
 
-					if (!sendTransportInstance) {
-						throw new Error("sendTranport not in tranport connect");
-					}
-
-					await sendTransportInstance.connect(rest.dtlsParameters);
-
-					console.log("transport connected");
-				} catch (error) {
-					console.log("error in tranport connect", error);
+				if (!sendTransportInstance) {
+					throw new Error("sendTranport not in tranport connect");
 				}
+
+				console.log("rest body in sendTransport-connect", rest.dtlsParameters.fingerprints);
+
+				await sendTransportInstance.connect({
+					dtlsParameters: rest.dtlsParameters
+				});
+
+				console.log("transport connected");
+			} catch (error) {
+				console.log("error in send tranport connect", error);
 			}
+		}
 
-			if (type === "recvTransport-connect") {
-				try {
-					const recvTranportInstance = getTransport(roomId, "receive");
+		if (type === "recvTransport-connect") {
+			try {
+				const recvTranportInstance = getTransport(roomId, "receive");
 
-					if (!recvTranportInstance) {
-						throw new Error("recvTranport not in tranport connect");
-					}
-
-					await recvTranportInstance.connect(rest.dtlsParameters);
-
-					console.log("transport connected");
-				} catch (error) {
-					console.log("error in tranport connect", error);
+				if (!recvTranportInstance) {
+					throw new Error("recvTranport not in tranport connect");
 				}
+
+				await recvTranportInstance.connect(rest.dtlsParameters);
+
+				console.log("transport connected");
+			} catch (error) {
+				console.log("error in recv tranport connect", error);
 			}
+		}
 
-			if (type === "transport-produce") {
-				try {
-					const sendTransportInstance = getTransport(roomId, "send");
+		if (type === "transport-produce") {
+			try {
+				const sendTransportInstance = getTransport(roomId, "send");
 
-					if (!sendTransportInstance) {
-						throw new Error("sendTranport not in producer creation ");
-					}
-
-					const producerInstance = await sendTransportInstance.produce({
-						kind: rest.kind,
-						rtpParameters: rest.rtpParameters,
-					});
-
-					let existingProducer = sendTrnsToProducer.get(sendTransportInstance);
-
-					if (!existingProducer) {
-						existingProducer = [];
-						sendTrnsToProducer.set(sendTransportInstance, existingProducer);
-					}
-
-					existingProducer.push(producerInstance);
-
-					ws.send(
-						JSON.stringify({
-							type: "producerCreated",
-							success: true,
-							producerId: producerInstance.id,
-							requestId: parsedData.requestId,
-						})
-					);
-
-					console.log("producer created ");
-				} catch (error) {
-					console.log("error in tranport connect", error);
-					ws.send(
-						JSON.stringify({
-							type: "producerCreated",
-							success: false,
-							requestId: parsedData.requestId,
-              error
-						})
-					);
+				if (!sendTransportInstance) {
+					throw new Error("sendTranport not in producer creation ");
 				}
+
+				const producerInstance = await sendTransportInstance.produce({
+					kind: rest.kind,
+					rtpParameters: rest.rtpParameters,
+				});
+
+				let existingProducer = sendTrnsToProducer.get(sendTransportInstance);
+
+				if (!existingProducer) {
+					existingProducer = [];
+					sendTrnsToProducer.set(sendTransportInstance, existingProducer);
+				}
+
+				existingProducer.push(producerInstance);
+
+				ws.send(
+					JSON.stringify({
+						type: "producerCreated",
+						success: true,
+						producerId: producerInstance.id,
+						requestId: parsedData.requestId,
+					})
+				);
+
+				console.log("producer created ");
+			} catch (error) {
+				console.log("error in  transport-produce tranport connect", error);
+				ws.send(
+					JSON.stringify({
+						type: "producerCreated",
+						success: false,
+						requestId: parsedData.requestId,
+				error
+					})
+				);
 			}
+		}
 
       if (type ==="createConsumer"){
        try {

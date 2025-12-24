@@ -14,9 +14,6 @@ type RouterAppData={
 
 
 
-
-
-
 class VideoCall{
 
    static worker:Worker;
@@ -97,13 +94,12 @@ export const getRouter= async (roomId:string)=>{
          appData:{roomId:roomId}
       }
    )
+   console.log("router Created with roomid =>",roomId);
 
    VideoCall.routersMap.set(roomId,routerInstance);
 
    return routerInstance;
-
 }
-
 
 export const  routerTransport= async (routerInstance:Router)=>{
   

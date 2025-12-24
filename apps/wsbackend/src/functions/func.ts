@@ -24,34 +24,57 @@ export interface AuthUser {
   success: boolean;
   userId: string | null;
   username: string | null;
+  type:ConnectionType
+
 }
 
-type UserInfo = {
+export type UserInfo = {
   userId: string;
   username: string;
 };
+type ConnectionType="chat"|"video";
 
 export const authUser = (reqUrl: string): AuthUser => {
-  const parsedUrl = url.parse(reqUrl, true);
-  const queryParams = parsedUrl.query;
+  let connectionType: ConnectionType="chat"
+  try {
+    const parsedUrl = url.parse(reqUrl, true);
 
+    const pathList = parsedUrl.pathname?.split("/");
 
-  if (queryParams.token) {
-    const decode = jwt.verify(
-      queryParams.token as string,
-      process.env.JWT_SECRET as string,
-    ) as JwtPayload;
+    if (pathList?.length === 3) {
+      if (pathList[2] === "video") {
+        connectionType = "video";
+      } else {
+        throw Error("url is not correct");
+      }
+    } 
 
-    return {
-      success: true,
-      userId: decode.id,
-      username: decode.username,
-    };
-  } else {
+    const queryParams = parsedUrl.query;
+
+    if (queryParams.token) {
+      const decode = jwt.verify(
+        queryParams.token as string,
+        process.env.JWT_SECRET as string,
+      ) as JwtPayload;
+
+      return {
+        success: true,
+        userId: decode.id,
+        username: decode.username,
+        type:connectionType
+      };
+    }else{
+      throw new Error("token is not present");
+    } 
+      
+    
+  } catch (error) {
+    console.log("error in authentication of user in websocket server")
     return {
       success: false,
       userId: null,
       username: null,
+      type:connectionType
     };
   }
 };
@@ -65,6 +88,8 @@ export const mainState: Map<string, UserSocket[]> = new Map();
 
 export const addUsertoRoom = (roomId: string, userSocket: WebSocket) => {
 
+  console.log("user in addUsertoRoom");
+
   const user = allUser.get(userSocket);
   if (!user) {
     console.log("user not found in adding user");
@@ -74,6 +99,7 @@ export const addUsertoRoom = (roomId: string, userSocket: WebSocket) => {
   // check for the first user
   if (!mainState.has(roomId)) {
     mainState.set(roomId, [{ userId: user.userId, socket: userSocket }]);
+
 
     userSocket.send("user Connected");
     return;
@@ -147,6 +173,7 @@ export const brodcastMessage = (
     return;
   }
 
+  // i have to fix like when the websocket backend restart all the mainstate data is gone and the frontend will is not sending roomId;
   if (!mainState.has(roomId)) {
     console.log("room id not present", roomId);
   }

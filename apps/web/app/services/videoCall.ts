@@ -13,10 +13,15 @@ export class VideoCall {
     #pendingCallbacks: Map<
       string,
       { callback: Function; errback: Function }
-   > | null = null;
+   > =  new Map();
     localStreams:MediaStream|null=null;
     currentRoomID:string|null=null;
     remoteStream:MediaStream|null=null;
+
+    #pendingResolve:(()=>void)|null=null;
+   #pendingReject: ((err: Error) => void) | null = null;
+    #pendingPromise:Promise<void>|null=null;
+
 
 
    static getInstance(){
@@ -26,158 +31,190 @@ export class VideoCall {
       return this.#videoInstance;
    }
 
-   async connect(authtoken:string){
-      if(this.#socket)return;
+   async connect(authtoken:string):Promise<void>{
+      try {
+         if (this.#socket) return;
 
-
-      const connection = new WebSocket(`ws://localhost:8080/ws/video?token${authtoken}`);
-
-      connection.onopen=()=>{
-         this.#socket=connection;
-         console.log("connection is made in vidoCall");
-      }
-
-      connection.onmessage=async (message)=>{
-         let parsedData;
-
-         try {
-            parsedData=JSON.parse(message.toString())
-         } catch  {
-            console.log("received non json data",message.toString())
+         if (!authtoken) {
+            throw new Error("authToken empty in videoConnect");
          }
 
-         const type = parsedData.type;
+         const connection = new WebSocket(`ws://localhost:8080/ws/video?token=${authtoken}`);
 
-         if(!type){
-            console.log("type property is missing");
-         }
-
-         if (type === "transportOptions") {
-            try {
-               const {
-                  routerRtpCapabilities,
-                  sendTransportOptions,
-                  recvTransportOptions,
-               } = parsedData;
-               const deviceResult = await this.#createDevice(routerRtpCapabilities);
-
-               if (!deviceResult.status) {
-                  throw new Error("device Creation failed");
-               }
-
-               this.#createSendTransportFunc(sendTransportOptions);
-               this.#createRecvTransportFunc(recvTransportOptions);
-               await this.#createProducer();
-            } catch (error) {
-               console.log(
-                  "error on TransportOptions on webSocketConnection",
-                  error
-               );
+         await new Promise<void>((resolve, reject) => {
+            connection.onopen = () => {
+               this.#socket = connection;
+               console.log("connection is made in vidoCall");
+               resolve()
             }
-         }
 
-         if (type === "producerCreated") {
+            connection.onerror = (err) => {
+               console.log("error in connect", err);
+               reject(new Error("connection failed "));
+            }
+         })
+
+         connection.onmessage = async (message) => {
+            let parsedData;
+
             try {
-               if(!this.#pendingCallbacks){
-                  throw new Error("pendingCallbacks is empty or request is not present");
-               }
-               const pendingCalls = this.#pendingCallbacks.get(
-                  parsedData.requestId
-               );
+               parsedData = JSON.parse(message.data.toString())
+               
+            } catch {
+               console.log("received non json data king", message.data.toString())
+               return;
+            }
 
-               if (!pendingCalls) {
-                  throw new Error(
-                     "request Id is missing in server response producerCreated"
+            console.log("parsed Data outside",parsedData);
+
+            let type;
+
+            if (!parsedData.type) {
+               throw new Error("type property is missing");
+            }else{
+               type=parsedData.type;
+            }
+
+
+
+            if (type === "transportOptions") {
+               try {
+                  const {
+                     routerRtpCapabilities,
+                     sendTransportOptions,
+                     recvTransportOptions,
+                  } = parsedData;
+                  const deviceResult = await this.#createDevice(routerRtpCapabilities);
+
+                  if (!deviceResult.status) {
+                     throw new Error("device Creation failed");
+                  }
+
+                  this.#createSendTransportFunc(sendTransportOptions);
+                  this.#createRecvTransportFunc(recvTransportOptions);
+                  await this.#createProducer();
+               } catch (error) {
+                  console.log(
+                     "error on TransportOptions on webSocketConnection",
+                     error
                   );
                }
-
-               if (parsedData.success) {
-                  pendingCalls.callback(parsedData.producerId);
-                  connection.send(
-                     JSON.stringify({
-                        type: "createConsumer",
-                        roomId: this.currentRoomID,
-                        producerId: parsedData.producerId,
-                        clientRtpCapabilites: this.#device?.rtpCapabilities,
-                     })
-                  );
-               } else {
-                  pendingCalls.errback(parsedData.error);
-               }
-
-               this.#pendingCallbacks.delete(parsedData.requestId);
-            } catch (error) {
-               console.log("error in producer created", error);
             }
-         }
 
-         if (type === "createdConsumerResponse") {
-            try {
-               if (parsedData.success) {
-                  const localConsumer =
-                     await this.#recvTransport?.consume(
-                        parsedData.consumerOptions
+            if (type === "producerCreated") {
+               try {
+                  if (!this.#pendingCallbacks) {
+                     console.log("")
+                     throw new Error("pendingCallbacks is empty or request is not present");
+                  }
+                  const pendingCalls = this.#pendingCallbacks.get(
+                     parsedData.requestId
+                  );
+
+                  if (!pendingCalls) {
+                     throw new Error(
+                        "request Id is missing in server response producerCreated"
                      );
-
-                  if (!localConsumer) {
-                     throw new Error("cosumer not created");
                   }
 
-                  console.log("localConsumer",localConsumer);
-
-
-                  const { track } = localConsumer;
-
-                  if (!this.remoteStream) {
-                     this.remoteStream = new MediaStream();
+                  if (parsedData.success) {
+                     pendingCalls.callback(parsedData.producerId);
+                     connection.send(
+                        JSON.stringify({
+                           type: "createConsumer",
+                           roomId: this.currentRoomID,
+                           producerId: parsedData.producerId,
+                           clientRtpCapabilites: this.#device?.rtpCapabilities,
+                        })
+                     );
+                  } else {
+                     pendingCalls.errback(parsedData.error);
                   }
-                  this.remoteStream.addTrack(track);
 
-                  connection.send(JSON.stringify({ type: "resumeConsumer", consumerId: parsedData.consumerOptions.id,roomId:this.currentRoomID }))
-               } else {
-                  console.log("consumer not created");
+                  this.#pendingCallbacks.delete(parsedData.requestId);
+               } catch (error) {
+                  console.log("error in producer created", error);
+                  this.#pendingReject?.(error as Error)
                }
-            } catch (error) {
-               console.log("error in the createdConsumerResponse", error);
             }
+
+            if (type === "createdConsumerResponse") {
+               try {
+                  if (parsedData.success) {
+                     const remoteConsumer =
+                        await this.#recvTransport?.consume(
+                           parsedData.consumerOptions
+                        );
+
+                     if (!remoteConsumer) {
+                        throw new Error("cosumer not created");
+                     }
+
+                     console.log("remoteConsumer", remoteConsumer);
+
+
+                     const { track } = remoteConsumer;
+
+                     if (!this.remoteStream) {
+                        this.remoteStream = new MediaStream();
+                     }
+                     this.remoteStream.addTrack(track);
+
+
+
+                     connection.send(JSON.stringify({ type: "resumeConsumer", consumerId: parsedData.consumerOptions.id, roomId: this.currentRoomID }))
+                     this.#pendingResolve?.()
+                  } else {
+                     console.log("consumer not created");
+                  }
+               } catch (error) {
+                  console.log("error in the createdConsumerResponse", error);
+               }
+            }
+
+
          }
-
-         await new Promise<void>(resolve => {
-            setTimeout(() => {
-               console.log("artificial sleep");
-               resolve();
-            }, 3000);
-         });
-
+      } catch (error) {
+         console.log("error in connect",error);
+         return;
+         
       }
    }
    
-   initVideoCall = (currentRoomId:string) => {
+   initVideoCall = (currentRoomId:string):Promise<void> => {
       this.currentRoomID=currentRoomId;
+
+      this.#pendingPromise= new Promise((resolve,reject)=>{
+
+         this.#pendingResolve=resolve;
+         this.#pendingReject=reject;
+      }
+   )
       this.#socket?.send(
          JSON.stringify({ type: "startVideoCall", roomId: currentRoomId })
       );
       // setLoading = true and make it false when the user gets message on the socket
       console.log("initVideoFuncCalled");
+
+      return this.#pendingPromise;
    };
 
 
    #createDevice = async (
       routerRtpCapabilities: any
    ): Promise<{ status: true | false }> => {
+      console.log("routerCapabitlites in device creation",routerRtpCapabilities);
       try {
-         const deviceInstance = new Device();
+         this.#device= new Device();
 
-         await deviceInstance.load(routerRtpCapabilities);
-
-         this.#device = deviceInstance;
+         await this.#device.load({routerRtpCapabilities});
 
          console.log("device is created and loaded ");
 
          this.#socket?.send(
             JSON.stringify({
                type: "client-rtpCapabilites",
-               clientRtpCapabilities: deviceInstance.rtpCapabilities,
+               clientRtpCapabilities: this.#device.rtpCapabilities,
             })
          );
 
@@ -223,8 +260,10 @@ export class VideoCall {
    
          sendTranport.on("produce", (parameters, callback, errback) => {
             const requestId = crypto.randomUUID();
+            console.log("requestId in client producer",requestId);
    
-            this.#pendingCallbacks?.set(requestId, { callback, errback });
+            const pendingSettingData=this.#pendingCallbacks?.set(requestId, { callback, errback });
+            console.log("pendingSettingData",pendingSettingData);
    
             const data = this.#socket?.send(
                JSON.stringify({
@@ -233,6 +272,7 @@ export class VideoCall {
                   transportId: sendTranport.id,
                   kind: parameters.kind,
                   rtpParameters: parameters.rtpParameters,
+                  roomId:this.currentRoomID
                })
             );
    
