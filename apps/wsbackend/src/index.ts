@@ -437,7 +437,6 @@ wss.on("connection", (ws, request) => {
        }
       }
       if (type ==="resumeConsumer"){
-        // implement the resuming logic
         try {
           if(!rest.consumerId){
             throw new Error("consumerId is missing in parsedData");
@@ -447,9 +446,15 @@ wss.on("connection", (ws, request) => {
           if(!consumerInstance.success){
             throw new Error("failed to get Consumer");
           }
+			 
+			 const consumer=consumerInstance.consumer;
+			 
+			  console.log("paused before resume:", consumer.paused);
 
-          consumerInstance.consumer.resume();
-          console.log("consumer resumed");
+          await consumer.resume();
+
+
+			console.log("paused after resume:", consumer.paused);
           
 
         } catch (error) {
