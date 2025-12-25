@@ -321,7 +321,9 @@ wss.on("connection", (ws, request) => {
 					throw new Error("recvTranport not in tranport connect");
 				}
 
-				await recvTranportInstance.connect(rest.dtlsParameters);
+				await recvTranportInstance.connect({
+					dtlsParameters: rest.dtlsParameters
+				});
 
 				console.log("transport connected");
 			} catch (error) {
