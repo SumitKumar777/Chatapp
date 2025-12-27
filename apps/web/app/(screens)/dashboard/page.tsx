@@ -194,7 +194,7 @@ const BACKEND_URL =
 		<>
 			<div className="bg-black/60 w-full h-full">
 				<div className="grid grid-cols-1 md:grid-cols-4 flex-1 overflow-hidden w-full">
-					<div className={`flex flex-col md:block md:col-span-1  h-screen `}>
+					<div className={` ${isSidebarOpen ? "block" : "hidden"} flex flex-col md:block md:col-span-1  h-screen `}>
 						<h1 className="text-4xl mb-5.5 font-bold pl-4 ">PaaPay Chat</h1>
 						<div className="flex pl-4 space-x-4 w-full  ">
 							<CreateRoom />
