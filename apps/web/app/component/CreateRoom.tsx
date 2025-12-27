@@ -5,6 +5,8 @@ import axios from "axios";
 import useSocket from "../store/hooks/useSocket";
 import { Dialog } from "radix-ui";
 import { Plus } from "lucide-react";
+import { toast } from "sonner";
+import { Spinner } from "@web/components/ui/spinner";
 
 function CreateRoom() {
   const [open, setOpen] = useState(false);
@@ -12,12 +14,14 @@ function CreateRoom() {
   const setRoom = useSocket((state) => state.setRoom);
   const setCurrentRoomId = useSocket((state) => state.setCurrentRoomId);
   const setCurrentRoomName = useSocket((state) => state.setCurrentRoomName);
+  const [loading, setLoading] = useState(false);
 
   const BACKEND_URL =
 		process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:3001";
 
   const createRoom = async (e: React.FormEvent<HTMLFormElement>) => {
     const formObj = e.currentTarget;
+    setLoading(true);
     try {
       e.preventDefault();
       const form = new FormData(e.currentTarget);
@@ -54,6 +58,7 @@ function CreateRoom() {
 
         setRoom(roomData);
         setOpen(false);
+        setLoading(false);
       } else {
         throw new Error(
           "error in create Room in sending create request to websocket server",
@@ -62,15 +67,10 @@ function CreateRoom() {
 
       formObj.reset();
     } catch (error: unknown) {
-      if (error instanceof Error) {
-        console.log(error, "error in form of creating the room", error.message);
-      } else {
-        console.log(
-          error,
-          "unexpected error in form of creating the room",
-          error,
-        );
-      }
+      setLoading(false);
+      const message = error instanceof Error ? error.message : "Unknown error";
+      toast.error("Failed to create room", { description: message });
+    
       formObj.reset();
     }
   };
@@ -119,8 +119,8 @@ function CreateRoom() {
 									</button>
 								</Dialog.Close>
 
-								<button type="submit" className="Button green w-full">
-									Create
+								<button type="submit" disabled={loading} className="Button green w-full">
+                  {loading ? <Spinner /> : "Create"}
 								</button>
 							</div>
 						</form>

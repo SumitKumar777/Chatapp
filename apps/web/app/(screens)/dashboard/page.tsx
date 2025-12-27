@@ -15,8 +15,8 @@ import userUtils from "../../store/hooks/userUtils";
 import Button from "../../component/Button";
 import UserAvatar from "../../component/UserAvatar";
 import { useRouter } from "next/dist/client/components/navigation";
-import  Logout  from "../../component/Logout";
-
+import Logout from "../../component/Logout";
+import { toast } from "sonner";
 
 interface RoomList {
   roomName: string;
@@ -29,22 +29,19 @@ type RommListResponse = {
   data: RoomList[];
 };
 
-type MessageType={
-  roomId:string;
-  userId:string;
-  name:string;
-  message:string;
-  time:string;
-}
-
-
-
+type MessageType = {
+  roomId: string;
+  userId: string;
+  name: string;
+  message: string;
+  time: string;
+};
 
 function Dashboard() {
   const setSocket = useSocket((state) => state.setSocket);
   const socket = useSocket((state) => state.socket);
   const userName = userDetail((state) => state.username);
-  const router=useRouter();
+  const router = useRouter();
 
   const setUserId = userDetail((state) => state.setUserId);
   const addRoom = useSocket((state) => state.addRoom);
@@ -55,8 +52,8 @@ function Dashboard() {
   const setUserName = userDetail((state) => state.setUserName);
   const isSidebarOpen = userUtils((state) => state.isSidebarOpen);
 
-const BACKEND_URL =
-	process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:3001";
+  const BACKEND_URL =
+    process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:3001";
 
   useEffect(() => {
     const getTokenAndConnect = async () => {
@@ -64,73 +61,66 @@ const BACKEND_URL =
         const res = await fetch("/internal/token");
         const data = await res.json();
 
-          const roomList = await axios.get<RommListResponse>( `${BACKEND_URL}/api/room/getAllRooms`,
-						{
-							withCredentials: true,
-						}
-					); 
+        const roomList = await axios.get<RommListResponse>(
+          `${BACKEND_URL}/api/room/getAllRooms`,
+          {
+            withCredentials: true,
+          },
+        );
         if (roomList.data.status !== "success") {
           throw new Error("fetching room failed");
         }
-        
 
         if (data.token) {
           const connection = new WebSocket(
-						`${process.env.NEXT_PUBLIC_WEBSOCKET_BACKEND_URL}/ws?token=${data.token}`
-					);
+            `${process.env.NEXT_PUBLIC_WEBSOCKET_BACKEND_URL}/ws?token=${data.token}`,
+          );
 
           let hasOpened = false;
 
           connection.onopen = () => {
-
             hasOpened = true;
 
-             if (connection && data.id) {
-								if (roomList.data.data) {
-									roomList.data.data.forEach((item) => {
-										connection.send(
-											JSON.stringify({
-												type: "join_room",
-												roomId: item.roomId,
-											})
-										);
-									});
-
-								} else {
-									console.log(
-										"room list is not present so connection are not made to websocket ",
-										roomList.data.data
-									);
-
-								}
-							}
+            if (connection && data.id) {
+              if (roomList.data.data) {
+                roomList.data.data.forEach((item) => {
+                  connection.send(
+                    JSON.stringify({
+                      type: "join_room",
+                      roomId: item.roomId,
+                    }),
+                  );
+                });
+              } else {
+                console.log(
+                  "room list is not present so connection are not made to websocket ",
+                  roomList.data.data,
+                );
+              }
+            }
             connection.send(JSON.stringify("hi there from frontend"));
           };
           connection.onmessage = (event) => {
             const data = event.data;
 
-
             let parsedData: MessageType;
-							try {
-								parsedData = JSON.parse(data);
-							} catch {
-								return;
-							}
+            try {
+              parsedData = JSON.parse(data);
+            } catch {
+              return;
+            }
 
             try {
-
               const modifiedMessage = {
-								userId: parsedData.userId,
-								id: nanoid(),
-								name: parsedData.name,
-								message: parsedData.message,
-								time: parsedData.time,
-							};
+                userId: parsedData.userId,
+                id: nanoid(),
+                name: parsedData.name,
+                message: parsedData.message,
+                time: parsedData.time,
+              };
 
-
-                addMessage(parsedData.roomId, modifiedMessage);
-           
-            } catch (error: unknown) {              
+              addMessage(parsedData.roomId, modifiedMessage);
+            } catch (error: unknown) {
               if (error instanceof Error) {
                 console.log(error.message, "in client on message");
               } else {
@@ -155,14 +145,12 @@ const BACKEND_URL =
             }
           };
 
-
           setSocket(connection);
 
           // i want to store userId as a string but it is getting stored as object if i set data.data.id the and remove the accessing of userId
 
           setUserId(data.id.id);
           setUserName(data.id.username);
-
 
           if (roomList.data.data.length !== 0) {
             addRoom(roomList.data.data);
@@ -172,16 +160,16 @@ const BACKEND_URL =
             }
           }
         }
-      } catch (error:unknown) {
+      } catch (error: unknown) {
         if (error instanceof Error) {
-          console.log(error.message, "error instance of error in dashboard useeffect");
+          console.log(
+            error.message,
+            "error instance of error in dashboard useeffect",
+          );
           return;
-
         }
         console.log("unexpected error in useeffect dashboard", error);
         return;
-
-
       }
     };
 
@@ -191,43 +179,50 @@ const BACKEND_URL =
   }, [socket]);
 
   return (
-		<>
-			<div className="bg-black/60 w-full h-full">
-				<div className="grid grid-cols-1 md:grid-cols-4 flex-1 overflow-hidden w-full">
-					<div className={` ${isSidebarOpen ? "block" : "hidden"} flex flex-col md:block md:col-span-1  h-screen `}>
-						<h1 className="text-4xl mb-5.5 font-bold pl-4 ">PaaPay Chat</h1>
-						<div className="flex pl-4 space-x-4 w-full  ">
-							<CreateRoom />
-							<JoinRoom />
-						</div>
-						<ListRooms classes={"overflow-y-scroll border-1 h-screen pl-2"} />
-					</div>
-					<div
-						className={` ${isSidebarOpen ? "hidden" : "block"} md:block flex flex-col h-screen w-full col-span-1 md:col-span-3`}
-					>
-						<div className="h-full flex flex-col overflow-hidden justify-between">
-							<div className="flex justify-between ">
-								<RoomHeading />
+    <>
+      <div className="bg-black/60 w-full h-full">
+        <div className="grid grid-cols-1 md:grid-cols-4 flex-1 overflow-hidden w-full">
+          <div
+            className={` ${isSidebarOpen ? "block" : "hidden"} flex flex-col md:block md:col-span-1  h-screen `}
+          >
+            <h1 className="text-4xl mb-5.5 font-bold pl-4 ">PaaPay Chat</h1>
+            <div className="flex px-2 space-x-4 w-full pb-4">
+              <CreateRoom />
+              <JoinRoom />
+            </div>
+            <ListRooms classes={"overflow-y-scroll border-[1px] border-black h-screen pl-2"} />
+          </div>
+          <div
+            className={` ${isSidebarOpen ? "hidden" : "block"} md:block flex flex-col h-screen w-full col-span-1 md:col-span-3`}
+          >
+            <div className="h-full flex flex-col overflow-hidden justify-between">
+              <div className="flex justify-between ">
+                <RoomHeading />
                 <div className="flex items-center space-x-2 mr-4">
-                  <UserAvatar  name={userName} />
-                  <Button className="bg-gray-700 text-white"  onClick={async () => {
-                    await Logout();
+                  <UserAvatar name={userName} />
+                  <Button
+                    className="bg-gray-700 text-white"
+                    onClick={async () => {
+                      await Logout();
 
-                    router.push("/signin");
-
-                  }}>Logout</Button>
+                      router.push("/signin");
+                      toast.success("Logged out successfully");
+                    }}
+                  >
+                    Logout
+                  </Button>
                 </div>
-							</div>
-							<div className="relative overflow-y-auto border-1 w-full h-full ">
-								<ShowMessage />
-							</div>
-							<SendMessage className="h-fit" />
-						</div>
-					</div>
-				</div>
-			</div>
-		</>
-	);
+              </div>
+              <div className="relative overflow-y-auto border-[1px] border-black w-full h-full ">
+                <ShowMessage  />
+              </div>
+              <SendMessage className="h-fit border-[1px] border-black" />
+            </div>
+          </div>
+        </div>
+      </div>
+    </>
+  );
 }
 
 export default Dashboard;

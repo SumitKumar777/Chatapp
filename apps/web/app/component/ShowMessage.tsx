@@ -49,7 +49,7 @@ function ShowMessage() {
   }, [messageByRoom]);
 
   return (
-    <div className="relative  w-full">
+    <div className="relative   w-full">
       <div className="scroll-smooth" ref={scrollRef}>
         <div className="text-white py-1 px-6 ">
           {(messageByRoom[currentRoomId ?? ""] ?? []).length > 0
@@ -71,7 +71,7 @@ function ShowMessage() {
                     />
                   ),
               )
-            : "NO Messages for this room"}
+            : <p className=" text-black text-center pt-10 text-xl">No message for this room</p> }
         </div>
       </div>
     </div>

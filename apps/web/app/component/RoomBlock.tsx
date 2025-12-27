@@ -3,6 +3,9 @@
 import axios from "axios";
 import useSocket, { Rooms } from "../store/hooks/useSocket";
 import userUtils from "../store/hooks/userUtils";
+import { useState } from "react";
+import { toast } from "sonner";
+import { Spinner } from "@web/components/ui/spinner";
 
 function RoomBlock({ roomName, roomId }: Rooms) {
   const setCurrentRoomId = useSocket((state) => state.setCurrentRoomId);
@@ -13,6 +16,9 @@ function RoomBlock({ roomName, roomId }: Rooms) {
   const currentRoomId = useSocket((state) => state.currentRoomId);
   const setCurrentRoomName = useSocket((state) => state.setCurrentRoomName);
   const setIsSidebarOpen = userUtils((state) => state.setIsSidebarOpen);
+  const [loading, setLoading] = useState(false);
+  const [left,setLeft]=useState(false);
+
 
   const BACKEND_URL =
 		process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:3001";
@@ -24,7 +30,7 @@ function RoomBlock({ roomName, roomId }: Rooms) {
   const leaveRoom = async (): Promise<"deleted" | "not_Deleted"> => {
     return new Promise((resolve, reject) => {
       try {
-
+        setLoading(true);
         const foundUser = room.some((item) => item.roomId === roomId);
 
         // true when roomId is found so user not left the room
@@ -42,14 +48,25 @@ function RoomBlock({ roomName, roomId }: Rooms) {
 
         if (socket?.readyState === WebSocket.OPEN) {
           socket.send(JSON.stringify(socketData));
+          setLoading(false);
+          if(room.length ===1){
+            setCurrentRoomId("");
+            setCurrentRoomName("");
+          }
+          setLeft(true);
+          toast.success("Left room successfully");
 
           return resolve("deleted");
         } else {
           console.log("last done");
+          setLoading(false);
           return resolve("not_Deleted");
         }
+
       } catch (error) {
-        console.log(error, "error in leave room ");
+        setLoading(false);
+        const message = error instanceof Error ? error.message : "Unknown error";
+        toast.error("Failed to leave room", { description: message });
         return reject(error);
       }
     });
@@ -59,6 +76,7 @@ function RoomBlock({ roomName, roomId }: Rooms) {
 
   const handleDelete = async () => {
     // it should send request to should send request to websocket backend to cut the connection and then make the request to the backend to remove the user from the database
+    setLoading(true);
     try {
       const connection = await leaveRoom();
 
@@ -69,15 +87,15 @@ function RoomBlock({ roomName, roomId }: Rooms) {
         { data: { roomId }, withCredentials: true },
       );
 
-  
-
+      setLoading(false);
       // remove from the room state
       deleteRoom(roomId);
       deleteMessage(roomId);
+      toast.success("Left room successfully");
     } catch (error: unknown) {
-      if (error instanceof Error) {
-        console.log("error in roomDeletion", error);
-      }
+      setLoading(false);
+      const message = error instanceof Error ? error.message : "Unknown error";
+      toast.error("Failed to leave room", { description: message });
     }
   };
 
@@ -95,17 +113,18 @@ function RoomBlock({ roomName, roomId }: Rooms) {
           {roomName[0]?.toUpperCase()}
           {roomName.slice(1)}
         </h1>
-        <p className="text-md">{roomId}</p>
       </div>
-      <div className="space-y-1">
+      <div className="space-y-1 space-x-2">
         <button
+
           onClick={(e) => {
             e.stopPropagation();
             leaveRoom();
           }}
+          disabled={left}
           className="bg-blue-500 p-1 rounded-md"
         >
-          Leave
+          {left ? "Left" : "Leave"}
         </button>
         <button
           onClick={(e) => {
@@ -114,7 +133,7 @@ function RoomBlock({ roomName, roomId }: Rooms) {
           }}
           className="bg-blue-400 p-1 rounded-md"
         >
-          Delete Room
+          {loading ? <Spinner /> : "Delete"}
         </button>
       </div>
     </div>

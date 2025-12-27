@@ -12,7 +12,7 @@ type RoomBlock={
 const RoomHeadingBlock=({roomName,roomId}:RoomBlock)=>{
 
    return (
-			<div className=" md:px-6 border-l-1 flex items-center ">
+			<div className=" md:px-6 border-l-[1px] flex items-center border-black py-2">
             <BackButton/>
 				<div className="ml-4">
 					<h1 className="text-3xl font-bold">

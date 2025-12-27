@@ -8,13 +8,12 @@ const RoomHeading=()=>{
   const currentRoomId = useSocket((state) => state.currentRoomId);
 	const currentRoomName=useSocket((state)=>state.currentRoomName);
 
-
    return (
 			<>
 
 					{currentRoomId || currentRoomName ? (
 						<RoomHeadingBlock
-							roomId={currentRoomId || ""}
+							roomId={""}
 							roomName={currentRoomName || ""}
 						/>
 					) : (
