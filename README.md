@@ -1,135 +1,136 @@
-# Turborepo starter
 
-This Turborepo starter is maintained by the Turborepo core team.
+# Real-Time Multi-Room Chat App
 
-## Using this example
+## Website where you can connect and communicate with people and teams in without any delay and scales to thousands of concurrent users
 
-Run the following command:
+# System Architecture
+![Architecture](system-architecture.png)
 
-```sh
-npx create-turbo@latest
-```
+## Architecture Explanation
+ In this project i have three microservice -> frontend, Http-Backend and WebSocket-Server 
 
-## What's inside?
+1. frontend connects to `httpBackend` for fetching the old records of user activity  and for state recovery if the frontend goes down and also connects with ` WebSocket-Server` for real time communication
 
-This Turborepo includes the following packages/apps:
+2. http-server first do the authentication with `Jwt method` and for rest of the request validates it so that no user who is not authentic and authorised can send request and then handles all the logic for featues supported 
 
-### Apps and Packages
+3. Websocket Server is gets connected to frontend and handles all the real time communication and supports user Featues and also the connection is only made with validate user checked by token which the user put in websocket connection url
 
-- `docs`: a [Next.js](https://nextjs.org/) app
-- `web`: another [Next.js](https://nextjs.org/) app
-- `@repo/ui`: a stub React component library shared by both `web` and `docs` applications
-- `@repo/eslint-config`: `eslint` configurations (includes `eslint-config-next` and `eslint-config-prettier`)
-- `@repo/typescript-config`: `tsconfig.json`s used throughout the monorepo
 
-Each package/app is 100% [TypeScript](https://www.typescriptlang.org/).
+# Demo 
+Demo-link https://www.youtube.com/watch?v=rq2T2pw_MHU
 
-### Utilities
+# Tech Stack
 
-This Turborepo has some additional tools already setup for you:
+1. `frontend` - `nextjs`(react), `zustand`(state management),`shadcn and radix`(styled and unstyled component)
 
-- [TypeScript](https://www.typescriptlang.org/) for static type checking
-- [ESLint](https://eslint.org/) for code linting
-- [Prettier](https://prettier.io) for code formatting
+2. `Http-backend`- nodejs, express ,bycrpt
+3. `WebSocket-Server` - native ws 
+4. `Authentication` - JsonWebToken(jwt),cors
+5. `caching` - Redis
+6. `Database` - primsaORM , postgres
+7. `Deployment` - Docker(containerized approach), AWS EC2,nginx
+8. `Testing` - Vitest(integration Tests) and playwright(end to end Testing) 
+9. `Github-Action `- CI,CD Pipeline
 
-### Build
+# Testing 
+1. HttpBackend - Integration test(`Vitest`) 
+2. Frontend - End To End Tests(`playwright`)
+   
+# Deployment 
+created docker file for each app and then in the github action first run then tests and then build the image and pushes image to docker hub and then ssh into to vm(EC2) and stop old container(if running) and pull the latest image and restart the container 
 
-To build all apps and packages, run the following command:
+# Key Featues 
+1. Real time communication using websocket
+2. Separation between Rest and RealTime communication
+3. stateful WebSocket Server(build's state from frontend sending data about user )
+4. Create and Join Room and also leave and delete room 
+   
 
-```
-cd my-turborepo
+# Data Flow 
 
-# With [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation) installed (recommended)
-turbo build
+### Authentication & Session Setup
 
-# Without [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation), use your package manager
-npx turbo build
-yarn dlx turbo build
-pnpm exec turbo build
-```
+ 1. User accesses the application via the frontend.
 
-You can build a specific package by using a [filter](https://turborepo.com/docs/crafting-your-repository/running-tasks#using-filters):
+2. Frontend sends authentication request to the HTTP backend.
 
-```
-# With [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation) installed (recommended)
-turbo build --filter=docs
+3. HTTP backend validates credentials.
 
-# Without [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation), use your package manager
-npx turbo build --filter=docs
-yarn exec turbo build --filter=docs
-pnpm exec turbo build --filter=docs
-```
+4. On success, backend generates a JWT and sets it as an HTTP-only cookie in the browser
 
-### Develop
+### User Initialization
 
-To develop all apps and packages, run the following command:
+1. Frontend fetches user-related data from the HTTP backend.
 
-```
-cd my-turborepo
+2. User state is initialized and stored in frontend state management.
 
-# With [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation) installed (recommended)
-turbo dev
+3. Frontend simultaneously establishes a WebSocket connection for real-time communication.
 
-# Without [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation), use your package manager
-npx turbo dev
-yarn exec turbo dev
-pnpm exec turbo dev
-```
+### Room Management
 
-You can develop a specific package by using a [filter](https://turborepo.com/docs/crafting-your-repository/running-tasks#using-filters):
+1. User creates or joins a chat room.
 
-```
-# With [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation) installed (recommended)
-turbo dev --filter=web
+2. WebSocket server subscribes the user’s connection to the corresponding room.
 
-# Without [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation), use your package manager
-npx turbo dev --filter=web
-yarn exec turbo dev --filter=web
-pnpm exec turbo dev --filter=web
-```
+3. User can now send and receive real-time messages within that room.
 
-### Remote Caching
 
-> [!TIP]
-> Vercel Remote Cache is free for all plans. Get started today at [vercel.com](https://vercel.com/signup?/signup?utm_source=remote-cache-sdk&utm_campaign=free_remote_cache).
+### Message Sending Flow
 
-Turborepo can use a technique known as [Remote Caching](https://turborepo.com/docs/core-concepts/remote-caching) to share cache artifacts across machines, enabling you to share build caches with your team and CI/CD pipelines.
+1. User sends a message from the frontend.
 
-By default, Turborepo will cache locally. To enable Remote Caching you will need an account with Vercel. If you don't have an account you can [create one](https://vercel.com/signup?utm_source=turborepo-examples), then enter the following commands:
+2. Frontend sends the message request to the HTTP backend.
 
-```
-cd my-turborepo
+HTTP backend:
 
-# With [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation) installed (recommended)
-turbo login
+3. Validates the user using JWT.
 
-# Without [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation), use your package manager
-npx turbo login
-yarn exec turbo login
-pnpm exec turbo login
-```
+4. Publishes the message to Redis for fast, non-blocking processing.
 
-This will authenticate the Turborepo CLI with your [Vercel account](https://vercel.com/docs/concepts/personal-accounts/overview).
+5. Backend immediately responds to the frontend for low latency.
 
-Next, you can link your Turborepo to your Remote Cache by running the following command from the root of your Turborepo:
 
-```
-# With [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation) installed (recommended)
-turbo link
+### Message Persistence & Caching
 
-# Without [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation), use your package manager
-npx turbo link
-yarn exec turbo link
-pnpm exec turbo link
-```
+1. A background worker consumes messages from Redis.
 
-## Useful Links
+Worker:
 
-Learn more about the power of Turborepo:
+2. Persists messages into the database.
 
-- [Tasks](https://turborepo.com/docs/crafting-your-repository/running-tasks)
-- [Caching](https://turborepo.com/docs/crafting-your-repository/caching)
-- [Remote Caching](https://turborepo.com/docs/core-concepts/remote-caching)
-- [Filtering](https://turborepo.com/docs/crafting-your-repository/running-tasks#using-filters)
-- [Configuration Options](https://turborepo.com/docs/reference/configuration)
-- [CLI Usage](https://turborepo.com/docs/reference/command-line-reference)
+3. Updates cache for recently accessed or unchanged data to optimize reads
+
+
+### Message Delivery
+
+1. WebSocket server receives message events.
+
+2. Being stateful, it:
+
+3. Maintains active client connections.
+
+4. Broadcasts messages to all users subscribed to the same room in real time.
+
+# Local setup
+
+1. Clone the repo by this command-> `git clone https://github.com/SumitKumar777/Chatapp.git`
+
+2. Install dependency-> `pnpm install or npm install `
+3. Copy the env.examples to .env file in every app and replace url with your own local url 
+
+4. Run command from the root of the repo (`Docker must be installed `) ->` docker compose -f docker-compose.yaml up -d `
+5. Run manually - > run `pnpm run dev `or `npm run dev`  or Go to each app and start it 
+
+
+# Limitation (Flaws)
+1. NO Horizontal Scalling in both httpBackend and WebSocketServer
+2. Bad UI in the frontend (Will improve in future)
+3. NO State management in real Time communication like no way to know if user is present and how many are their in room (wil do it  😅)
+
+
+# Future Improvemnt
+1. Add Video Calling and screen sharing
+2. And Correct all the above mentioned limitation(Flaws)
+
+
+# Thank you for Reading

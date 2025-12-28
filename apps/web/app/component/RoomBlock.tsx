@@ -49,10 +49,7 @@ function RoomBlock({ roomName, roomId }: Rooms) {
         if (socket?.readyState === WebSocket.OPEN) {
           socket.send(JSON.stringify(socketData));
           setLoading(false);
-          if(room.length ===1){
-            setCurrentRoomId("");
-            setCurrentRoomName("");
-          }
+         
           setLeft(true);
           toast.success("Left room successfully");
 
@@ -86,6 +83,11 @@ function RoomBlock({ roomName, roomId }: Rooms) {
        await axios.delete( `${BACKEND_URL}/api/room/leaveroom`,
         { data: { roomId }, withCredentials: true },
       );
+
+      if(room.length===1){
+        setCurrentRoomId("");
+        setCurrentRoomName("");
+      }
 
       setLoading(false);
       // remove from the room state
