@@ -9,7 +9,7 @@ if (!process.env.JWT_SECRET){
    dotenv.config();
 }
 const JWT_SECRET=process.env.JWT_SECRET as string;
-console.log("JWT_SECRET in internal token route", JWT_SECRET);
+
 
 export async function GET() {
    const cookieStore = await cookies();

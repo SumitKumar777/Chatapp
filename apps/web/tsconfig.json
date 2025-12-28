@@ -1,12 +1,12 @@
 {
   "extends": "@repo/typescript-config/nextjs.json",
   "compilerOptions": {
-    "ignoreDeprecations": "6.0",
     "plugins": [
       {
         "name": "next"
       }
     ],
+    "forceConsistentCasingInFileNames": true,
     "baseUrl": ".",
     "paths": {
       "@web/*": ["./app/*"],
