@@ -36,8 +36,20 @@ Demo-link https://www.youtube.com/watch?v=rq2T2pw_MHU
 1. HttpBackend - Integration test(`Vitest`) 
 2. Frontend - End To End Tests(`playwright`)
    
-# Deployment 
-created docker file for each app and then in the github action first run then tests and then build the image and pushes image to docker hub and then ssh into to vm(EC2) and stop old container(if running) and pull the latest image and restart the container 
+# Deployment and CI/CD
+1. Created a docker file for each application for isolated running 
+2. On Push:
+   - The workflow checks out the code
+   - Installs Dependencies and Run automated Tests to prevent broken deployment
+3. if tests Passs:
+   - Builds Docker images for each application
+   - Tags images with latest
+   - Pushes the images to docker  hub
+4. After successful image push:
+   - GitHub Actions SSHs into the EC2 instance
+   - Stops the old running container (if any)
+   - Pulls the latest image from Docker Hub
+   - Restarts the container with the updated image
 
 # Key Featues 
 1. Real time communication using websocket
