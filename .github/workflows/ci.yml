@@ -71,7 +71,7 @@ jobs:
           key: ${{ secrets.SERVER_SSH_KEY }}
           script: |
             cd ~/chatapp
-            sudo docker compose -f docker-compose.prod.yml pull
-            sudo docker compose --env-file .env -f docker-compose.prod.yml up -d --remove-orphans
+            sudo docker compose -f docker-compose.yaml pull
+            sudo docker compose --env-file .env -f docker-compose.yaml up -d --remove-orphans
             sudo docker system prune -f
   
