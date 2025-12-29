@@ -16,9 +16,11 @@ if (!process.env.JWT_SECRET) {
 
 
 if (!process.env.JWT_SECRET) {
+
   throw new Error("JWT_SECRET environment variable is required");
 }
 
+console.log("JwtSceret",process.env.JWT_SECRET)
 
 
 
@@ -52,22 +54,36 @@ type UserInfo = {
 };
 
 const authUser = (reqUrl: string): AuthUser => {
-  const parsedUrl = url.parse(reqUrl, true);
-  const queryParams = parsedUrl.query;
+  try {
+    const parsedUrl = url.parse(reqUrl, true);
+    const queryParams = parsedUrl.query;
+    let decode;
+
+    const token= decodeURIComponent(queryParams.token as string);
+
+    if (!token) {
+      throw new Error("token is not present in websocketServer");
+    }
 
 
-  if (queryParams.token) {
-    const decode = jwt.verify(
-      queryParams.token as string,
-      process.env.JWT_SECRET as string,
-    ) as JwtPayload;
+    if (token) {
+       decode = jwt.verify(
+        token ,
+        process.env.JWT_SECRET as string,
+      ) as JwtPayload;
+    } 
 
+    if(!decode){
+      throw new Error("decode is not present authuser");
+    }
+ 
     return {
       success: true,
       userId: decode.id,
       username: decode.username,
     };
-  } else {
+  } catch (error) {
+    console.log("error in AuthUser In websocket Server",error);
     return {
       success: false,
       userId: null,

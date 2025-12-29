@@ -12,21 +12,32 @@ const JWT_SECRET=process.env.JWT_SECRET as string;
 
 
 export async function GET() {
-   const cookieStore = await cookies();
-   const token = cookieStore.get("Authorization")?.value ?? " " ;
-   let id: JwtPayload | null = null;
+   try {
+      const cookieStore = await cookies();
+      const token = cookieStore.get("Authorization")?.value;
+      let id: JwtPayload | null = null;
 
-   if (token) {
-      try {
-         id = jwt.verify(token, JWT_SECRET) as JwtPayload;
-         console.log("Verified token id: in internal", id);
-      } catch (err) {
-         console.error("Invalid token:", err);
-         id = null;
+
+      if(!token){
+         throw new Error("token is not present")
       }
+
+      if (token) {
+         try {
+            id = jwt.verify(token, JWT_SECRET) as JwtPayload;
+            console.log("Verified token id: in internal", id);
+         } catch (err) {
+            console.error("Invalid token:", err);
+            id = null;
+            throw new Error("invalid token");
+         }
+      }
+
+
+
+      return NextResponse.json({ token: token , id });
+   } catch (error) {
+      console.log("error in internal Token parser",error);
+      return NextResponse.json({token:null,id:null})
    }
-   
-
-
-   return NextResponse.json({ token: token || null,id });
 }
